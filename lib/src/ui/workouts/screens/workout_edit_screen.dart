@@ -16,8 +16,11 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../data/repositories/workouts/inputs/workout_input.dart';
 import '../../../data/utils/enums.dart';
 import '../../../data/utils/json_data.dart';
@@ -30,8 +33,42 @@ import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/advanced_editor/advanced_editor.dart';
 import '../widgets/details/basic_editor/basic_editor.dart';
+import '../widgets/details/cardio_editor/cardio_editor.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_header_edit_card.dart';
+import '../widgets/details/workout_skeleton_placeholder.dart';
+
+const _skeletonStrengthEditWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Workout Name',
+  description: 'Loading workout description placeholder...',
+  muscleGroups: {MuscleGroup.push},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 4,
+  totalReps: 40,
+  editorType: EditorType.advanced,
+  createdBy: CreatedBy.user,
+);
+
+const _skeletonCardioEditWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Cardio Workout',
+  description: 'Loading workout description placeholder...',
+  muscleGroups: {},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 4,
+  totalReps: 0,
+  editorType: EditorType.cardio,
+  createdBy: CreatedBy.user,
+);
+
+void _noopPress() {}
 
 class WorkoutEditScreen extends StatefulWidget {
   static const name = "workout_edit";
@@ -57,47 +94,137 @@ class _WorkoutEditScreenState extends State<WorkoutEditScreen> {
     }
   }
 
+  Widget _buildSkeletonLoading(
+    ThemeData theme,
+    DataDisplaySizesList sizes,
+    WorkoutState state,
+  ) {
+    WorkoutDto? cachedWorkout;
+    for (final item in state.workouts) {
+      if (item.id == widget.workoutId) {
+        cachedWorkout = item;
+        break;
+      }
+    }
+    final header = cachedWorkout == null
+        ? null
+        : WorkoutHeaderCard(
+            actionButtonIcon: Icon(
+              Icons.edit_outlined,
+              color: theme.colorScheme.onSurface,
+            ),
+            actionButtonPress: _noopPress,
+            sizes: sizes,
+            workoutDto: cachedWorkout.isCardio
+                ? _skeletonCardioEditWorkout
+                : _skeletonStrengthEditWorkout,
+          );
+
+    return ResponsiveScaffold(
+      title: 'Edit Workout',
+      showBackButton: false,
+      isEntity: true,
+      body: Skeletonizer(
+        enabled: true,
+        child: WorkoutSkeletonPlaceholder(
+          theme: theme,
+          sizes: sizes,
+          sectionTitle: 'Sets',
+          header: header,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = BreakPoint.fromContext(context).screenSize;
     final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
     final theme = Theme.of(context);
+    final route = ModalRoute.of(context);
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          previous.isLoading != current.isLoading,
+          (route?.isCurrent ?? true) &&
+          ((previous.isLoading &&
+                  !current.isLoading &&
+                  current.error != null) ||
+              (previous.error != current.error && current.error != null)),
       listener: (context, state) {
-        if (state.isLoading) {
+        if (state.isLoading || state.error == null) {
           return;
         }
 
-        if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${state.error}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.error!.description),
+            backgroundColor: Colors.red,
+          ),
+        );
       },
       builder: (context, state) {
         final workout = state.selectedWorkout;
+        final isSkeletonLoading =
+            state.isLoading &&
+            (workout == null || workout.id != widget.workoutId);
 
-        if (workout == null) {
-          return const AppScaffold(
-            title: "Edit Workout",
+        if (isSkeletonLoading) {
+          return _buildSkeletonLoading(theme, sizes, state);
+        }
+
+        if (workout == null || workout.id != widget.workoutId) {
+          return AppScaffold(
+            title: 'Edit Workout',
             isEntity: true,
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(sizes.viewPadding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: sizes.largeIconSize,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    SizedBox(height: sizes.spacing),
+                    Text(
+                      state.error?.description ?? 'Workout not found',
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: sizes.spacing),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        }
+                      },
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         }
 
         final bool hasComplexSets = (workout.sets ?? []).any(
           (set) => set.setType != WorkoutSetType.standard,
         );
+        final bool useCardioEditor = workout.editorType == EditorType.cardio;
         final bool useAdvancedEditor =
             workout.editorType == EditorType.advanced || hasComplexSets;
 
-        final Widget editor = useAdvancedEditor
+        final Widget editor = useCardioEditor
+            ? CardioEditor(
+                workoutId: widget.workoutId,
+                initialSets: workout.cardioSets ?? [],
+              )
+            : useAdvancedEditor
             ? AdvancedEditor(
                 workoutId: widget.workoutId,
                 initialSets: workout.sets ?? [],

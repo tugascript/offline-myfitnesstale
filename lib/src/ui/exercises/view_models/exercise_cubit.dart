@@ -49,7 +49,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getExercises({
     String? name,
+    ExerciseType type = ExerciseType.strength,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     Difficulty? difficulty,
     int? equipmentId,
     int? limit,
@@ -59,13 +62,20 @@ class ExerciseCubit extends Cubit<ExerciseState>
   }) => _loadExercises(
     ExercisePagination(
       name: name ?? '',
-      muscleGroup: muscleGroup,
+      type: type,
+      muscleGroup: type == ExerciseType.strength ? muscleGroup : null,
+      cardioBaseMode: type == ExerciseType.cardio ? cardioBaseMode : null,
+      cardioUnitType: type == ExerciseType.cardio ? cardioUnitType : null,
       difficulty: difficulty,
       equipmentId: equipmentId,
       isFavorite: isFavourite,
       createdBy: createdBy,
       limit: limit ?? state.exercisePagination.limit,
-      offset: offset ?? state.exercisePagination.offset,
+      offset:
+          offset ??
+          (type == state.exercisePagination.type
+              ? state.exercisePagination.offset
+              : 0),
       total: 0,
     ),
   );
@@ -83,12 +93,16 @@ class ExerciseCubit extends Cubit<ExerciseState>
       (afterWrite ?? state).copyWith(
         exercisesRequestId: requestId,
         pendingExercisesQuery: Nullable(query),
+        error: const Nullable(null),
       ),
     );
 
     final result = await _exerciseService.getExercises(
       name: query.name,
+      type: query.type,
       muscleGroup: query.muscleGroup,
+      cardioBaseMode: query.cardioBaseMode,
+      cardioUnitType: query.cardioUnitType,
       isFavorite: query.isFavorite,
       difficulty: query.difficulty,
       equipmentId: query.equipmentId,
@@ -152,7 +166,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getExercise(int id) async {
     _logger.info('getExercise: getting exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _exerciseService.getExercise(id);
     if (result.isErr()) {
@@ -204,7 +218,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
     _logger.info('createExercise: creating exercise');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.createExercise(input, createdBy);
 
     if (result.isErr()) {
@@ -254,7 +268,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> updateExercise(int id, ExerciseInput input) async {
     _logger.info('updateExercise: updating exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.updateExercise(id, input);
 
     if (result.isErr()) {
@@ -306,7 +320,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
       _logger.info(
         'updateExerciseFavorite: updating exercise favorite by id: $id',
       );
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
       final result = await _exerciseService.updateExerciseFavorite(
         id,
         isFavorite,
@@ -361,7 +375,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> deleteExercise(int id) async {
     _logger.info('deleteExercise: deleting exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.deleteExercise(id);
     if (result.isErr()) {
       final error = result.error;
@@ -953,7 +967,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
   }
 
   Future<void> getSelectionExercises({
+    ExerciseType? type,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     String name = "",
     bool isFavorite = false,
   }) async {
@@ -962,7 +979,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
       state.copyWith(selectionExercisesRequestId: requestId, isLoading: true),
     );
     final exercisesResult = await _exerciseService.getAllExercises(
+      type: type,
       muscleGroup: muscleGroup,
+      cardioBaseMode: cardioBaseMode,
+      cardioUnitType: cardioUnitType,
       name: name,
       isFavorite: isFavorite,
     );

@@ -21,6 +21,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/inputs/exercise_input.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/exercise_details.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../utils/nullable.dart';
 import '../../../core/sizes/data_display_sizes.dart';
@@ -43,6 +44,9 @@ class EditExerciseModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strengthDetails = exercise.getDetails<StrengthExerciseDetails>();
+    final cardioDetails = exercise.getDetails<CardioExerciseDetails>();
+
     return AppModal(
       theme: theme,
       sizes: sizes,
@@ -53,6 +57,8 @@ class EditExerciseModal extends StatelessWidget {
           isLoading: state.isLoading,
           submitLabel: "UPDATE EXERCISE",
           submitIcon: Icons.save,
+          initialType: exercise.type,
+          allowTypeSelection: false,
           initialName: exercise.name,
           initialDescription: exercise.description.isEmpty
               ? null
@@ -60,26 +66,31 @@ class EditExerciseModal extends StatelessWidget {
           initialVideoUrl: exercise.video?.platform == VideoPlatform.youtube
               ? exercise.video!.uri
               : null,
-          initialMuscleGroup: exercise.muscleGroup,
-          initialPrimaryMuscles: exercise.muscles.primary,
-          initialSecondaryMuscles: exercise.muscles.secondary,
+          initialMuscleGroup: strengthDetails?.muscleGroup,
+          initialPrimaryMuscles: strengthDetails?.muscles.primary ?? const {},
+          initialSecondaryMuscles:
+              strengthDetails?.muscles.secondary ?? const {},
           initialEquipmentIds:
               exercise.equipments?.map((e) => e.id).toSet() ?? const {},
           initialDifficulty: exercise.difficulty,
-          initialWeightProgress: exercise.weightProgress,
+          initialWeightProgress:
+              strengthDetails?.weightProgress ??
+              ExerciseWeightProgress.positive,
+          initialCardioBaseMode:
+              cardioDetails?.defaultMode ?? CardioBaseMode.time,
+          initialCardioUnitType:
+              cardioDetails?.unitType ?? CardioUnitType.distance,
+          initialCardioUnit: cardioDetails?.unit ?? '',
           initialIsFavorite: exercise.isFavorite,
           onSubmit:
               ({
                 String? description,
                 String? videoUrl,
                 Difficulty? difficulty,
-                required ExerciseWeightProgress weightProgress,
+                required ExerciseDetails details,
                 required Set<int> equipmentIds,
                 required bool isFavorite,
-                required MuscleGroup muscleGroup,
                 required String name,
-                required Set<Muscle> primaryMuscles,
-                required Set<Muscle> secondaryMuscles,
               }) async {
                 final existingPicture = exercise.picture;
                 final existingVideo = exercise.video;
@@ -89,11 +100,7 @@ class EditExerciseModal extends StatelessWidget {
                   ExerciseInput(
                     name: name,
                     description: Nullable(description),
-                    muscleGroup: muscleGroup,
-                    muscles: TargetMuscles(
-                      primary: primaryMuscles,
-                      secondary: secondaryMuscles,
-                    ),
+                    details: details,
                     picture: Nullable(
                       existingPicture != null
                           ? PictureData(
@@ -119,7 +126,6 @@ class EditExerciseModal extends StatelessWidget {
                     ),
                     equipmentIds: equipmentIds,
                     difficulty: Nullable(difficulty),
-                    weightProgress: weightProgress,
                     isFavorite: isFavorite,
                   ),
                 );

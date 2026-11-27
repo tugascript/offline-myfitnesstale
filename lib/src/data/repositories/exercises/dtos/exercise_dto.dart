@@ -20,7 +20,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/exercise_model.dart';
 import '../../../utils/enums.dart';
-import '../../../utils/json_data.dart';
+import '../../../utils/exercise_details.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
@@ -33,11 +33,9 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
   final String description;
   final PictureDto? picture;
   final VideoDto? video;
-  final MuscleGroup muscleGroup;
-  final TargetMuscles muscles;
+  final ExerciseDetails details;
   final bool isFavorite;
   final Difficulty? difficulty;
-  final ExerciseWeightProgress weightProgress;
   final CreatedBy createdBy;
 
   // Related data
@@ -49,14 +47,19 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     required this.description,
     this.picture,
     this.video,
-    required this.muscleGroup,
-    required this.muscles,
+    required this.details,
     this.equipments,
     this.isFavorite = false,
     this.difficulty,
-    this.weightProgress = ExerciseWeightProgress.positive,
     required this.createdBy,
   });
+
+  ExerciseType get type => details.type;
+
+  T? getDetails<T extends ExerciseDetails>() {
+    final ExerciseDetails current = details;
+    return current is T ? current : null;
+  }
 
   factory ExerciseDto.fromModel(
     Exercise exercise, {
@@ -72,11 +75,9 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
       video: exercise.video != null
           ? VideoDto.fromModel(exercise.video!)
           : null,
-      muscleGroup: exercise.muscleGroup,
-      muscles: exercise.muscles,
+      details: exercise.details,
       isFavorite: exercise.isFavorite,
       difficulty: exercise.difficulty,
-      weightProgress: exercise.weightProgress,
       equipments: equipments,
       createdBy: exercise.createdBy,
     );
@@ -89,12 +90,10 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     String? description,
     Nullable<PictureDto>? picture,
     Nullable<VideoDto>? video,
-    MuscleGroup? muscleGroup,
-    TargetMuscles? muscles,
+    ExerciseDetails? details,
     Nullable<List<EquipmentDto>>? equipments,
     bool? isFavorite,
     Nullable<Difficulty>? difficulty,
-    ExerciseWeightProgress? weightProgress,
     CreatedBy? createdBy,
   }) {
     return ExerciseDto(
@@ -103,12 +102,10 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
       description: description ?? this.description,
       picture: picture != null ? picture.value : this.picture,
       video: video != null ? video.value : this.video,
-      muscleGroup: muscleGroup ?? this.muscleGroup,
-      muscles: muscles ?? this.muscles,
+      details: details ?? this.details,
       equipments: equipments != null ? equipments.value : this.equipments,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
-      weightProgress: weightProgress ?? this.weightProgress,
       createdBy: createdBy ?? this.createdBy,
     );
   }
@@ -120,12 +117,10 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     description,
     picture,
     video,
-    muscleGroup,
-    muscles,
+    details,
     equipments,
     isFavorite,
     difficulty,
-    weightProgress,
     createdBy,
   ];
 }

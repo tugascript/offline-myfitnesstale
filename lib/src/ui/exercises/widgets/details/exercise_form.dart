@@ -20,6 +20,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/display_names.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/exercise_details.dart';
+import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/youtube_video_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_dropdown.dart';
@@ -28,6 +30,7 @@ import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/dynamic_list_input.dart';
 import '../../view_models/exercise_cubit.dart';
 import '../../view_models/states/exercise_state.dart';
+import '../exercise_type_toggle.dart';
 
 class ExerciseForm extends StatefulWidget {
   final ThemeData theme;
@@ -36,6 +39,8 @@ class ExerciseForm extends StatefulWidget {
   final String submitLabel;
   final IconData? submitIcon;
 
+  final ExerciseType initialType;
+  final bool allowTypeSelection;
   final String initialName;
   final String? initialDescription;
   final String? initialVideoUrl;
@@ -45,18 +50,18 @@ class ExerciseForm extends StatefulWidget {
   final Set<int> initialEquipmentIds;
   final Difficulty? initialDifficulty;
   final ExerciseWeightProgress initialWeightProgress;
+  final CardioBaseMode initialCardioBaseMode;
+  final CardioUnitType initialCardioUnitType;
+  final String initialCardioUnit;
   final bool initialIsFavorite;
 
   final void Function({
     required String name,
     required String? description,
     required String? videoUrl,
-    required MuscleGroup muscleGroup,
-    required Set<Muscle> primaryMuscles,
-    required Set<Muscle> secondaryMuscles,
+    required ExerciseDetails details,
     required Set<int> equipmentIds,
     required Difficulty? difficulty,
-    required ExerciseWeightProgress weightProgress,
     required bool isFavorite,
   })
   onSubmit;
@@ -68,15 +73,20 @@ class ExerciseForm extends StatefulWidget {
     required this.isLoading,
     required this.submitLabel,
     this.submitIcon,
+    this.initialType = ExerciseType.strength,
+    this.allowTypeSelection = true,
     required this.initialName,
     required this.initialDescription,
     this.initialVideoUrl,
-    required this.initialMuscleGroup,
-    required this.initialPrimaryMuscles,
-    required this.initialSecondaryMuscles,
+    this.initialMuscleGroup,
+    this.initialPrimaryMuscles = const {},
+    this.initialSecondaryMuscles = const {},
     required this.initialEquipmentIds,
     required this.initialDifficulty,
     this.initialWeightProgress = ExerciseWeightProgress.positive,
+    this.initialCardioBaseMode = CardioBaseMode.time,
+    this.initialCardioUnitType = CardioUnitType.distance,
+    this.initialCardioUnit = '',
     required this.initialIsFavorite,
     required this.onSubmit,
   });
@@ -90,6 +100,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _videoUrlController = TextEditingController();
+  final _cardioUnitController = TextEditingController();
   late final _FormData _data;
 
   @override
@@ -101,6 +112,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
       }
     });
     _data = _FormData(
+      type: widget.initialType,
       name: widget.initialName,
       description: widget.initialDescription ?? '',
       videoUrl: widget.initialVideoUrl ?? '',
@@ -110,11 +122,15 @@ class _ExerciseFormState extends State<ExerciseForm> {
       equipmentIds: {...widget.initialEquipmentIds},
       difficulty: widget.initialDifficulty,
       weightProgress: widget.initialWeightProgress,
+      cardioBaseMode: widget.initialCardioBaseMode,
+      cardioUnitType: widget.initialCardioUnitType,
+      cardioUnit: widget.initialCardioUnit,
       isFavorite: widget.initialIsFavorite,
     );
     _nameController.text = _data.name;
     _descriptionController.text = _data.description;
     _videoUrlController.text = _data.videoUrl;
+    _cardioUnitController.text = _data.cardioUnit;
   }
 
   @override
@@ -122,6 +138,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
     _nameController.dispose();
     _descriptionController.dispose();
     _videoUrlController.dispose();
+    _cardioUnitController.dispose();
     super.dispose();
   }
 
@@ -170,6 +187,324 @@ class _ExerciseFormState extends State<ExerciseForm> {
     }
   }
 
+  Widget _buildTypeHeader() {
+    if (widget.allowTypeSelection) {
+      return ExerciseTypeToggle(
+        key: const ValueKey('exercise-form-type-toggle'),
+        selectedType: _data.type,
+        sizes: widget.sizes,
+        enabled: !widget.isLoading,
+        onChanged: (nextType) {
+          setState(() {
+            _data.type = nextType;
+          });
+        },
+      );
+    }
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Chip(
+        key: const ValueKey('exercise-form-locked-type'),
+        shape: const BeveledRectangleBorder(),
+        side: BorderSide(
+          color: widget.theme.colorScheme.outlineVariant,
+          width: 0.5,
+        ),
+        visualDensity: VisualDensity.compact,
+        avatar: Icon(
+          _data.type == ExerciseType.cardio
+              ? Icons.directions_run
+              : Icons.fitness_center,
+          size: widget.sizes.iconSmallSize,
+        ),
+        label: Text(
+          EnumDisplayNames.getExerciseTypeDisplayName(_data.type),
+          style: TextStyle(fontSize: widget.sizes.smallFontSize),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildStrengthFields() {
+    return [
+      AppDropdown<MuscleGroup>(
+        theme: widget.theme,
+        isLoading: widget.isLoading,
+        value: _data.muscleGroup,
+        filled: true,
+        emptyLabel: 'Muscle Group',
+        labelText: 'Muscle Group',
+        items: MuscleGroup.values,
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        labelBuilder: (d) => EnumDisplayNames.getMuscleGroupDisplayName(d),
+        onChanged: (value) {
+          setState(() {
+            _data.muscleGroup = value;
+            if (value == null) {
+              _data.primaryMuscles.clear();
+              _data.secondaryMuscles.clear();
+            } else {
+              final allowedMuscles = Muscle.fromMuscleGroup(value);
+              _data.primaryMuscles.retainAll(allowedMuscles);
+              _data.secondaryMuscles.retainAll(allowedMuscles);
+            }
+          });
+        },
+        onSaved: (value) {
+          if (value != null) {
+            setState(() {
+              _data.muscleGroup = value;
+            });
+          }
+        },
+        validator: (value) =>
+            value == null ? 'Please select a muscle group' : null,
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      AppDropdown<ExerciseWeightProgress>(
+        theme: widget.theme,
+        isLoading: widget.isLoading,
+        value: _data.weightProgress,
+        filled: true,
+        emptyLabel: 'Weight Progress',
+        showEmptyValue: false,
+        items: ExerciseWeightProgress.values,
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        labelText: 'Weight Progress',
+        labelBuilder: (d) =>
+            EnumDisplayNames.getExerciseWeightProgressDisplayName(d),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _data.weightProgress = value;
+            });
+          }
+        },
+        onSaved: (value) {
+          if (value != null) {
+            setState(() {
+              _data.weightProgress = value;
+            });
+          }
+        },
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      Text(
+        "🥇 Primary Muscles",
+        style: TextStyle(
+          fontSize: widget.sizes.subtitleFontSize,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      DynamicListInput<Muscle>(
+        filled: true,
+        theme: widget.theme,
+        handlesPadding: widget.sizes.thirdPadding,
+        items: _data.primaryMuscles.toList(),
+        addEnabled: _hasAvailableGroupMuscles,
+        itemBuilder: (context, index, item) {
+          return AppDropdown<Muscle>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            filled: true,
+            value: item,
+            emptyLabel: 'Primary Muscle',
+            items: _muscleDropdownItems(
+              currentItem: item,
+              excludedMuscles: _data.secondaryMuscles,
+            ),
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
+            onChanged: (value) {
+              setState(() {
+                _data.primaryMuscles.remove(item);
+                if (value != null) {
+                  _data.primaryMuscles.add(value);
+                }
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.primaryMuscles.add(value);
+                });
+              }
+            },
+          );
+        },
+        onChanged: (value) {
+          setState(() {
+            _data.primaryMuscles = value.toSet();
+          });
+        },
+        onAdd: () => _addMuscle(_data.primaryMuscles),
+        keyBuilder: (item) => ValueKey(item),
+        addLabel: 'Add Muscle',
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        spacing: widget.sizes.spacing,
+        isLoading: widget.isLoading,
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      Text(
+        "🥈 Secondary Muscles",
+        style: TextStyle(
+          fontSize: widget.sizes.subtitleFontSize,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      DynamicListInput<Muscle>(
+        theme: widget.theme,
+        handlesPadding: widget.sizes.thirdPadding,
+        items: _data.secondaryMuscles.toList(),
+        filled: true,
+        addEnabled: _hasAvailableGroupMuscles,
+        itemBuilder: (context, index, item) {
+          return AppDropdown<Muscle>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            value: item,
+            filled: true,
+            emptyLabel: 'Secondary Muscle',
+            items: _muscleDropdownItems(
+              currentItem: item,
+              excludedMuscles: _data.primaryMuscles,
+            ),
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
+            onChanged: (value) {
+              setState(() {
+                _data.secondaryMuscles.remove(item);
+                if (value != null) {
+                  _data.secondaryMuscles.add(value);
+                }
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.secondaryMuscles.add(value);
+                });
+              }
+            },
+          );
+        },
+        onChanged: (value) {
+          setState(() {
+            _data.secondaryMuscles = value.toSet();
+          });
+        },
+        onAdd: () => _addMuscle(_data.secondaryMuscles),
+        keyBuilder: (item) => ValueKey(item),
+        addLabel: 'Add Muscle',
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        spacing: widget.sizes.spacing,
+        isLoading: widget.isLoading,
+      ),
+    ];
+  }
+
+  List<Widget> _buildCardioFields() {
+    return [
+      AppDropdown<CardioBaseMode>(
+        key: const ValueKey('exercise-form-cardio-mode'),
+        theme: widget.theme,
+        isLoading: widget.isLoading,
+        value: _data.cardioBaseMode,
+        filled: true,
+        emptyLabel: 'Default Mode',
+        labelText: 'Default Mode',
+        showEmptyValue: false,
+        items: CardioBaseMode.values,
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        labelBuilder: EnumDisplayNames.getCardioBaseModeDisplayName,
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _data.cardioBaseMode = value;
+            });
+          }
+        },
+        onSaved: (value) {
+          if (value != null) {
+            setState(() {
+              _data.cardioBaseMode = value;
+            });
+          }
+        },
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      AppDropdown<CardioUnitType>(
+        key: const ValueKey('exercise-form-cardio-unit-type'),
+        theme: widget.theme,
+        isLoading: widget.isLoading,
+        value: _data.cardioUnitType,
+        filled: true,
+        emptyLabel: 'Unit Type',
+        labelText: 'Unit Type',
+        showEmptyValue: false,
+        items: CardioUnitType.values,
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        labelBuilder: EnumDisplayNames.getCardioUnitTypeDisplayName,
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _data.cardioUnitType = value;
+            });
+          }
+        },
+        onSaved: (value) {
+          if (value != null) {
+            setState(() {
+              _data.cardioUnitType = value;
+            });
+          }
+        },
+      ),
+      SizedBox(height: widget.sizes.spacing),
+      AppTextFormField(
+        key: const ValueKey('exercise-form-cardio-unit'),
+        filled: true,
+        theme: widget.theme,
+        maxLines: 1,
+        isLoading: widget.isLoading,
+        controller: _cardioUnitController,
+        labelText: 'Unit',
+        hintText: 'e.g., km, m, laps, steps',
+        fontSize: widget.sizes.subtitleFontSize,
+        padding: widget.sizes.padding,
+        onChanged: (value) {
+          setState(() {
+            _data.cardioUnit = value;
+          });
+        },
+        onSaved: (value) {
+          if (value != null) {
+            setState(() {
+              _data.cardioUnit = value;
+            });
+          }
+        },
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please enter a unit';
+          }
+          return null;
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -178,6 +513,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildTypeHeader(),
+          SizedBox(height: widget.sizes.spacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
@@ -304,41 +641,6 @@ class _ExerciseFormState extends State<ExerciseForm> {
             validator: YoutubeVideoUtils.validateOptionalUrl,
           ),
           SizedBox(height: widget.sizes.spacing),
-          AppDropdown<MuscleGroup>(
-            theme: widget.theme,
-            isLoading: widget.isLoading,
-            value: _data.muscleGroup,
-            filled: true,
-            emptyLabel: 'Muscle Group',
-            labelText: 'Muscle Group',
-            items: MuscleGroup.values,
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            labelBuilder: (d) => EnumDisplayNames.getMuscleGroupDisplayName(d),
-            onChanged: (value) {
-              setState(() {
-                _data.muscleGroup = value;
-                if (value == null) {
-                  _data.primaryMuscles.clear();
-                  _data.secondaryMuscles.clear();
-                } else {
-                  final allowedMuscles = Muscle.fromMuscleGroup(value);
-                  _data.primaryMuscles.retainAll(allowedMuscles);
-                  _data.secondaryMuscles.retainAll(allowedMuscles);
-                }
-              });
-            },
-            onSaved: (value) {
-              if (value != null) {
-                setState(() {
-                  _data.muscleGroup = value;
-                });
-              }
-            },
-            validator: (value) =>
-                value == null ? 'Please select a muscle group' : null,
-          ),
-          SizedBox(height: widget.sizes.spacing),
           AppDropdown<Difficulty>(
             theme: widget.theme,
             isLoading: widget.isLoading,
@@ -364,152 +666,10 @@ class _ExerciseFormState extends State<ExerciseForm> {
             },
           ),
           SizedBox(height: widget.sizes.spacing),
-          AppDropdown<ExerciseWeightProgress>(
-            theme: widget.theme,
-            isLoading: widget.isLoading,
-            value: _data.weightProgress,
-            filled: true,
-            emptyLabel: 'Weight Progress',
-            showEmptyValue: false,
-            items: ExerciseWeightProgress.values,
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            labelText: 'Weight Progress',
-            labelBuilder: (d) =>
-                EnumDisplayNames.getExerciseWeightProgressDisplayName(d),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _data.weightProgress = value;
-                });
-              }
-            },
-            onSaved: (value) {
-              if (value != null) {
-                setState(() {
-                  _data.weightProgress = value;
-                });
-              }
-            },
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          Text(
-            "🥇 Primary Muscles",
-            style: TextStyle(
-              fontSize: widget.sizes.subtitleFontSize,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          DynamicListInput<Muscle>(
-            filled: true,
-            theme: widget.theme,
-            handlesPadding: widget.sizes.thirdPadding,
-            items: _data.primaryMuscles.toList(),
-            addEnabled: _hasAvailableGroupMuscles,
-            itemBuilder: (context, index, item) {
-              return AppDropdown<Muscle>(
-                theme: widget.theme,
-                isLoading: widget.isLoading,
-                filled: true,
-                value: item,
-                emptyLabel: 'Primary Muscle',
-                items: _muscleDropdownItems(
-                  currentItem: item,
-                  excludedMuscles: _data.secondaryMuscles,
-                ),
-                fontSize: widget.sizes.subtitleFontSize,
-                padding: widget.sizes.padding,
-                labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
-                onChanged: (value) {
-                  setState(() {
-                    _data.primaryMuscles.remove(item);
-                    if (value != null) {
-                      _data.primaryMuscles.add(value);
-                    }
-                  });
-                },
-                onSaved: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.primaryMuscles.add(value);
-                    });
-                  }
-                },
-              );
-            },
-            onChanged: (value) {
-              setState(() {
-                _data.primaryMuscles = value.toSet();
-              });
-            },
-            onAdd: () => _addMuscle(_data.primaryMuscles),
-            keyBuilder: (item) => ValueKey(item),
-            addLabel: 'Add Muscle',
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            spacing: widget.sizes.spacing,
-            isLoading: widget.isLoading,
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          Text(
-            "🥈 Secondary Muscles",
-            style: TextStyle(
-              fontSize: widget.sizes.subtitleFontSize,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          DynamicListInput<Muscle>(
-            theme: widget.theme,
-            handlesPadding: widget.sizes.thirdPadding,
-            items: _data.secondaryMuscles.toList(),
-            filled: true,
-            addEnabled: _hasAvailableGroupMuscles,
-            itemBuilder: (context, index, item) {
-              return AppDropdown<Muscle>(
-                theme: widget.theme,
-                isLoading: widget.isLoading,
-                value: item,
-                filled: true,
-                emptyLabel: 'Secondary Muscle',
-                items: _muscleDropdownItems(
-                  currentItem: item,
-                  excludedMuscles: _data.primaryMuscles,
-                ),
-                fontSize: widget.sizes.subtitleFontSize,
-                padding: widget.sizes.padding,
-                labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
-                onChanged: (value) {
-                  setState(() {
-                    _data.secondaryMuscles.remove(item);
-                    if (value != null) {
-                      _data.secondaryMuscles.add(value);
-                    }
-                  });
-                },
-                onSaved: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.secondaryMuscles.add(value);
-                    });
-                  }
-                },
-              );
-            },
-            onChanged: (value) {
-              setState(() {
-                _data.secondaryMuscles = value.toSet();
-              });
-            },
-            onAdd: () => _addMuscle(_data.secondaryMuscles),
-            keyBuilder: (item) => ValueKey(item),
-            addLabel: 'Add Muscle',
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            spacing: widget.sizes.spacing,
-            isLoading: widget.isLoading,
-          ),
+          if (_data.type == ExerciseType.cardio)
+            ..._buildCardioFields()
+          else
+            ..._buildStrengthFields(),
           SizedBox(height: widget.sizes.spacing),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -599,26 +759,44 @@ class _ExerciseFormState extends State<ExerciseForm> {
           AppElevatedButton(
             theme: widget.theme,
             onPressed: () {
-              if (_formKey.currentState!.validate() &&
-                  _data.muscleGroup != null) {
-                _formKey.currentState!.save();
-                widget.onSubmit(
-                  name: _nameController.text.trim(),
-                  description: _descriptionController.text.trim().isEmpty
-                      ? null
-                      : _descriptionController.text.trim(),
-                  videoUrl: _videoUrlController.text.trim().isEmpty
-                      ? null
-                      : _videoUrlController.text.trim(),
-                  muscleGroup: _data.muscleGroup!,
-                  primaryMuscles: _data.primaryMuscles,
-                  secondaryMuscles: _data.secondaryMuscles,
-                  equipmentIds: _data.equipmentIds,
-                  difficulty: _data.difficulty,
-                  weightProgress: _data.weightProgress,
-                  isFavorite: _data.isFavorite,
-                );
+              if (!_formKey.currentState!.validate()) {
+                return;
               }
+              if (_data.type == ExerciseType.strength &&
+                  _data.muscleGroup == null) {
+                return;
+              }
+
+              _formKey.currentState!.save();
+              final ExerciseDetails details = switch (_data.type) {
+                ExerciseType.strength => StrengthExerciseDetails(
+                  muscleGroup: _data.muscleGroup!,
+                  muscles: TargetMuscles(
+                    primary: _data.primaryMuscles,
+                    secondary: _data.secondaryMuscles,
+                  ),
+                  weightProgress: _data.weightProgress,
+                ),
+                ExerciseType.cardio => CardioExerciseDetails(
+                  defaultMode: _data.cardioBaseMode,
+                  unitType: _data.cardioUnitType,
+                  unit: _cardioUnitController.text.trim(),
+                ),
+              };
+
+              widget.onSubmit(
+                name: _nameController.text.trim(),
+                description: _descriptionController.text.trim().isEmpty
+                    ? null
+                    : _descriptionController.text.trim(),
+                videoUrl: _videoUrlController.text.trim().isEmpty
+                    ? null
+                    : _videoUrlController.text.trim(),
+                details: details,
+                equipmentIds: _data.equipmentIds,
+                difficulty: _data.difficulty,
+                isFavorite: _data.isFavorite,
+              );
             },
             isLoading: widget.isLoading,
             sizes: widget.sizes,
@@ -632,6 +810,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
 }
 
 final class _FormData {
+  ExerciseType type;
   String name;
   String description;
   String videoUrl;
@@ -641,9 +820,13 @@ final class _FormData {
   Set<int> equipmentIds;
   Difficulty? difficulty;
   ExerciseWeightProgress weightProgress;
+  CardioBaseMode cardioBaseMode;
+  CardioUnitType cardioUnitType;
+  String cardioUnit;
   bool isFavorite;
 
   _FormData({
+    required this.type,
     required this.name,
     required this.description,
     required this.videoUrl,
@@ -653,6 +836,9 @@ final class _FormData {
     required this.equipmentIds,
     required this.difficulty,
     required this.weightProgress,
+    required this.cardioBaseMode,
+    required this.cardioUnitType,
+    required this.cardioUnit,
     required this.isFavorite,
   });
 }

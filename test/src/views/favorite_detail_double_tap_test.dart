@@ -31,6 +31,7 @@ import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repo
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
@@ -57,8 +58,11 @@ class _TestExerciseCubit extends ExerciseCubit {
             id: 1,
             name: 'Bench Press',
             description: 'Compound push movement',
-            muscleGroup: MuscleGroup.push,
-            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            details: StrengthExerciseDetails(
+              muscleGroup: MuscleGroup.push,
+              muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+              weightProgress: ExerciseWeightProgress.positive,
+            ),
             equipments: [],
             isFavorite: false,
             createdBy: CreatedBy.user,
@@ -78,18 +82,7 @@ class _TestExerciseCubit extends ExerciseCubit {
     if (current == null || isClosed) return;
     emit(
       state.copyWith(
-        selectedExercise: Nullable(
-          ExerciseDto(
-            id: current.id,
-            name: current.name,
-            description: current.description,
-            muscleGroup: current.muscleGroup,
-            muscles: current.muscles,
-            equipments: current.equipments,
-            isFavorite: isFavorite,
-            createdBy: current.createdBy,
-          ),
-        ),
+        selectedExercise: Nullable(current.copyWith(isFavorite: isFavorite)),
         isLoading: false,
       ),
     );

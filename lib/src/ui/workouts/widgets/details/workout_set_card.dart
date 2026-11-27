@@ -25,6 +25,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/widgets/detail_number.dart';
 import '../../../core/widgets/set_type_badge.dart';
+import '../../../exercises/screens/exercise_detail_screen.dart';
 
 class WorkoutSetCard extends StatelessWidget {
   final ThemeData theme;
@@ -118,7 +119,12 @@ class WorkoutSetCard extends StatelessWidget {
       shape: _cardShape(),
       child: InkWell(
         onTap: () {
-          context.push('/exercises/${exercise.exerciseId}');
+          context.push(
+            ExerciseDetailScreen.location(
+              exercise.exerciseId,
+              type: ExerciseType.strength,
+            ),
+          );
         },
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
@@ -381,7 +387,12 @@ class _StackedExerciseRow extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        context.push('/exercises/${setExercise.exerciseId}');
+        context.push(
+          ExerciseDetailScreen.location(
+            setExercise.exerciseId,
+            type: ExerciseType.strength,
+          ),
+        );
       },
       child: Padding(
         padding: EdgeInsets.symmetric(

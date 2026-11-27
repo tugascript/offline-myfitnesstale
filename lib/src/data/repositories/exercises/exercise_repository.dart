@@ -30,6 +30,7 @@ import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/join_dao.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
@@ -79,6 +80,28 @@ final class ExerciseRepository implements Repository {
     );
   }
 
+  Result<ExerciseDetails, ServiceError<T>> _normalizeDetails<
+    T extends ErrorTypes
+  >(ExerciseDetails details, T invalidInputType) {
+    return switch (details) {
+      StrengthExerciseDetails() => ok(details),
+      CardioExerciseDetails(:final unit) => () {
+        final trimmedUnit = unit.trim();
+        if (trimmedUnit.isEmpty) {
+          return err<ExerciseDetails, ServiceError<T>>(
+            ServiceError(
+              type: invalidInputType,
+              description: 'Cardio unit cannot be empty',
+            ),
+          );
+        }
+        return ok<ExerciseDetails, ServiceError<T>>(
+          details.copyWith(unit: trimmedUnit),
+        );
+      }(),
+    };
+  }
+
   Future<
     Result<
       PaginatedDto<ExerciseDto, Exercise>,
@@ -87,7 +110,10 @@ final class ExerciseRepository implements Repository {
   >
   getExercises({
     String? name,
+    ExerciseType? type,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     Difficulty? difficulty,
     int? equipmentId,
     bool isFavorite = false,
@@ -101,8 +127,35 @@ final class ExerciseRepository implements Repository {
     if (name != null && name.isNotEmpty) {
       query.and(ExerciseColumns.name.like, '%$name%');
     }
+    if (type != null) {
+      query.and(ExerciseColumns.type.equal, type.value);
+    }
     if (muscleGroup != null) {
-      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.strength.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('muscleGroup'),
+        muscleGroup.value,
+      );
+    }
+    if (cardioBaseMode != null) {
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.cardio.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('defaultMode'),
+        cardioBaseMode.value,
+      );
+    }
+    if (cardioUnitType != null) {
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.cardio.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('unitType'),
+        cardioUnitType.value,
+      );
     }
     if (isFavorite) {
       query.and(ExerciseColumns.isFavorite.equal, 1);
@@ -159,7 +212,10 @@ final class ExerciseRepository implements Repository {
 
   Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
   getAllExercises({
+    ExerciseType? type,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     String name = "",
     bool isFavorite = false,
   }) async {
@@ -169,8 +225,35 @@ final class ExerciseRepository implements Repository {
     if (name.isNotEmpty) {
       query.and(ExerciseColumns.name.like, '%$name%');
     }
+    if (type != null) {
+      query.and(ExerciseColumns.type.equal, type.value);
+    }
     if (muscleGroup != null) {
-      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.strength.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('muscleGroup'),
+        muscleGroup.value,
+      );
+    }
+    if (cardioBaseMode != null) {
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.cardio.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('defaultMode'),
+        cardioBaseMode.value,
+      );
+    }
+    if (cardioUnitType != null) {
+      if (type == null) {
+        query.and(ExerciseColumns.type.equal, ExerciseType.cardio.value);
+      }
+      query.and(
+        ExerciseColumns.details.jsonEqual('unitType'),
+        cardioUnitType.value,
+      );
     }
     if (isFavorite) {
       query.and(ExerciseColumns.isFavorite.equal, 1);
@@ -253,16 +336,22 @@ final class ExerciseRepository implements Repository {
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
     _logger.info("Creating exercise with name: ${input.name}");
+    final normalizedDetailsResult = _normalizeDetails(
+      input.details,
+      SingleErrorTypes.invalidInput,
+    );
+    if (normalizedDetailsResult.isErr()) {
+      return err(normalizedDetailsResult.error);
+    }
+
     final Exercise exercise = Exercise.create(
       name: input.name,
-      muscleGroup: input.muscleGroup,
-      muscles: input.muscles,
+      details: normalizedDetailsResult.value,
       description: input.description.value,
       picture: input.picture.value,
       video: input.video.value,
       isFavorite: input.isFavorite,
       difficulty: input.difficulty.value,
-      weightProgress: input.weightProgress,
       createdBy: createdBy,
     );
 
@@ -335,6 +424,18 @@ final class ExerciseRepository implements Repository {
     Transaction? transaction,
   }) async {
     _logger.info("Creating ${exerciseInputs.length} exercises...");
+    final List<ExerciseDetails> normalizedDetails = [];
+    for (final exerciseInput in exerciseInputs) {
+      final result = _normalizeDetails(
+        exerciseInput.details,
+        OperationErrorTypes.invalidInput,
+      );
+      if (result.isErr()) {
+        return err(result.error);
+      }
+      normalizedDetails.add(result.value);
+    }
+
     try {
       Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
       create(Transaction txn) async {
@@ -359,16 +460,15 @@ final class ExerciseRepository implements Repository {
         }
 
         final List<ExerciseEquipment> allJoinRows = [];
-        for (final exerciseInput in exerciseInputs) {
+        for (int index = 0; index < exerciseInputs.length; index++) {
+          final exerciseInput = exerciseInputs[index];
           final exercise = Exercise.create(
             name: exerciseInput.name,
-            muscleGroup: exerciseInput.muscleGroup,
-            muscles: exerciseInput.muscles,
+            details: normalizedDetails[index],
             description: exerciseInput.description.value,
             picture: exerciseInput.picture.value,
             video: exerciseInput.video.value,
             difficulty: exerciseInput.difficulty.value,
-            weightProgress: exerciseInput.weightProgress,
             isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
@@ -429,6 +529,14 @@ final class ExerciseRepository implements Repository {
     ExerciseInput input,
   ) async {
     _logger.info("Updating exercise with id: $id");
+    final normalizedDetailsResult = _normalizeDetails(
+      input.details,
+      SingleErrorTypes.invalidInput,
+    );
+    if (normalizedDetailsResult.isErr()) {
+      return err(normalizedDetailsResult.error);
+    }
+
     try {
       final Exercise? exercise = await _exerciseDao.selectOne(id);
       if (exercise == null) {
@@ -441,16 +549,27 @@ final class ExerciseRepository implements Repository {
         );
       }
 
+      final ExerciseDetails normalizedDetails = normalizedDetailsResult.value;
+      if (exercise.type != normalizedDetails.type) {
+        _logger.info(
+          "Rejected exercise type change for id: $id from ${exercise.type.value} to ${normalizedDetails.type.value}",
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Exercise type cannot be changed after creation',
+          ),
+        );
+      }
+
       final Exercise updatedExercise = exercise.copyWith(
         name: input.name,
         description: input.description,
-        muscles: input.muscles,
-        muscleGroup: input.muscleGroup,
+        details: normalizedDetails,
         picture: input.picture,
         video: input.video,
         isFavorite: input.isFavorite,
         difficulty: input.difficulty,
-        weightProgress: input.weightProgress,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 

@@ -29,6 +29,7 @@ import '../../services/sqlite/dao.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
@@ -101,13 +102,15 @@ final class ExerciseRecordRepository implements Repository {
           exerciseRecord,
           txn,
         );
-        final completionResult = await _completeMatchingStrengthGoals(
-          txn,
-          input,
-          exercise.weightProgress,
-        );
-        if (completionResult.isErr()) {
-          throw completionResult.error;
+        if (exercise.details case final StrengthExerciseDetails details) {
+          final completionResult = await _completeMatchingStrengthGoals(
+            txn,
+            input,
+            details.weightProgress,
+          );
+          if (completionResult.isErr()) {
+            throw completionResult.error;
+          }
         }
 
         return recordId;
@@ -407,13 +410,15 @@ final class ExerciseRecordRepository implements Repository {
       );
       await _exerciseRecordDao.startTransaction((txn) async {
         await _exerciseRecordDao.update(updatedExerciseRecord, txn);
-        final completionResult = await _completeMatchingStrengthGoals(
-          txn,
-          input,
-          exercise.weightProgress,
-        );
-        if (completionResult.isErr()) {
-          throw completionResult.error;
+        if (exercise.details case final StrengthExerciseDetails details) {
+          final completionResult = await _completeMatchingStrengthGoals(
+            txn,
+            input,
+            details.weightProgress,
+          );
+          if (completionResult.isErr()) {
+            throw completionResult.error;
+          }
         }
       });
       _logger.info('Updated exercise record with id $id');

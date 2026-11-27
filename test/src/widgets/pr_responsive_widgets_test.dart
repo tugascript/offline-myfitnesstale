@@ -39,6 +39,7 @@ import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_screen.dart';
@@ -134,8 +135,11 @@ final _date = DateTime(2026, 10, 13);
 final _exercise = ExerciseDto.fromModel(
   Exercise.create(
     name: 'Bench press with a long exercise name',
-    muscleGroup: MuscleGroup.push,
-    muscles: const TargetMuscles(primary: {}, secondary: {}),
+    details: const StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: TargetMuscles(primary: {}, secondary: {}),
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
   ).copyWith(id: const Nullable(1)),
 );
 final _strengthGoal = StrengthGoalDto(
@@ -207,8 +211,11 @@ class _Exercises extends ExerciseCubit {
           ExerciseDto.fromModel(
             Exercise.create(
               name: 'Bench press with a long exercise name',
-              muscleGroup: MuscleGroup.push,
-              muscles: const TargetMuscles(primary: {}, secondary: {}),
+              details: const StrengthExerciseDetails(
+                muscleGroup: MuscleGroup.push,
+                muscles: TargetMuscles(primary: {}, secondary: {}),
+                weightProgress: ExerciseWeightProgress.positive,
+              ),
             ).copyWith(id: const Nullable(1)),
           ),
         ],

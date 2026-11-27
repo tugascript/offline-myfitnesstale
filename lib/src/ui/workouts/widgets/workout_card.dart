@@ -60,39 +60,66 @@ class WorkoutCard extends StatelessWidget {
             children: [
               TotalNumericString(
                 leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                name: "Sets",
+                name: workout.isCardio ? "Rounds" : "Sets",
                 total: workout.totalSets,
                 fontSize: sizes.fontSize,
               ),
-              TotalNumericString(
-                leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                name: "Reps",
-                total: workout.totalReps,
-                fontSize: sizes.fontSize,
-              ),
+              if (!workout.isCardio)
+                TotalNumericString(
+                  leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
+                  name: "Reps",
+                  total: workout.totalReps,
+                  fontSize: sizes.fontSize,
+                ),
             ],
           ),
         ),
         SizedBox(height: sizes.spacing),
-        Wrap(
-          spacing: sizes.spacing / 3,
-          children: workout.muscleGroups.map((mg) {
-            return MuscleGroupBadge(
-              muscleGroup: mg,
-              fontSize: sizes.fontSize * 0.8,
-              theme: theme,
-            );
-          }).toList(),
-        ),
+        if (workout.isCardio)
+          Wrap(
+            spacing: sizes.spacing / 3,
+            children: [
+              Chip(
+                shape: const BeveledRectangleBorder(),
+                side: BorderSide.none,
+                backgroundColor: theme.colorScheme.secondary.withValues(
+                  alpha: 0.2,
+                ),
+                visualDensity: VisualDensity.compact,
+                avatar: Icon(
+                  Icons.directions_run,
+                  size: sizes.fontSize,
+                  color: theme.colorScheme.onSurface,
+                ),
+                label: Text(
+                  'Cardio',
+                  style: TextStyle(fontSize: sizes.fontSize * 0.8),
+                ),
+              ),
+            ],
+          )
+        else
+          Wrap(
+            spacing: sizes.spacing / 3,
+            children: workout.muscleGroups.map((mg) {
+              return MuscleGroupBadge(
+                muscleGroup: mg,
+                fontSize: sizes.fontSize * 0.8,
+                theme: theme,
+              );
+            }).toList(),
+          ),
         SizedBox(height: sizes.spacing),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            DifficultyBadge(
-              difficulty: workout.difficulty,
-              spacing: sizes.padding / 2,
-              fontSize: sizes.fontSize,
-              fontWeight: FontWeight.w600,
+            Flexible(
+              child: DifficultyBadge(
+                difficulty: workout.difficulty,
+                spacing: sizes.padding / 2,
+                fontSize: sizes.fontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Icon(
               Icons.arrow_forward_ios,

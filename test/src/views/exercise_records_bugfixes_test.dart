@@ -33,6 +33,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_i
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/dates.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
@@ -150,16 +151,22 @@ void main() {
     id: 1,
     name: 'Alpha Press',
     description: '',
-    muscleGroup: MuscleGroup.push,
-    muscles: emptyMuscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: emptyMuscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.system,
   );
   const exerciseB = ExerciseDto(
     id: 2,
     name: 'Beta Row',
     description: '',
-    muscleGroup: MuscleGroup.pull,
-    muscles: emptyMuscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.pull,
+      muscles: emptyMuscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.system,
   );
 
@@ -330,8 +337,11 @@ void main() {
       Exercise.create(
         name: 'Bench Press',
         description: '',
-        muscleGroup: MuscleGroup.push,
-        muscles: emptyMuscles,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: emptyMuscles,
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ).toMap(),
     );
 
@@ -444,8 +454,11 @@ void main() {
       Exercise.create(
         name: 'Bench Press',
         description: '',
-        muscleGroup: MuscleGroup.push,
-        muscles: emptyMuscles,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: emptyMuscles,
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ).toMap(),
     );
     final squatId = await db.insert(
@@ -453,8 +466,11 @@ void main() {
       Exercise.create(
         name: 'Back Squat',
         description: '',
-        muscleGroup: MuscleGroup.legs,
-        muscles: emptyMuscles,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.legs,
+          muscles: emptyMuscles,
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ).toMap(),
     );
 
@@ -572,8 +588,11 @@ void main() {
         Exercise.create(
           name: 'Bench Press',
           description: '',
-          muscleGroup: MuscleGroup.push,
-          muscles: emptyMuscles,
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: emptyMuscles,
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
         ).toMap(),
       );
       final goalId = await db.insert(
@@ -709,9 +728,11 @@ void main() {
       Exercise.create(
         name: 'Assisted Pull-Up',
         description: '',
-        muscleGroup: MuscleGroup.pull,
-        muscles: emptyMuscles,
-        weightProgress: ExerciseWeightProgress.negative,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.pull,
+          muscles: emptyMuscles,
+          weightProgress: ExerciseWeightProgress.negative,
+        ),
       ).toMap(),
     );
     final goalId = await db.insert(

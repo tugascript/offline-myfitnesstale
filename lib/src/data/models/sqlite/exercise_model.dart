@@ -16,10 +16,12 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../utils/nullable.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/json_data.dart';
 import 'model.dart';
 
@@ -31,9 +33,8 @@ enum ExerciseColumns with Columns {
   description("description"),
   picture("picture"),
   video("video"),
-  muscleGroup("muscle_group"),
-  muscles("muscles"),
-  weightProgress("weight_progress"),
+  type("type"),
+  details("details"),
   isFavorite("is_favorite"),
   difficulty("difficulty"),
   createdBy("created_by"),
@@ -46,6 +47,7 @@ enum ExerciseColumns with Columns {
   const ExerciseColumns(this.value);
 }
 
+@immutable
 final class Exercise extends Equatable implements Model {
   @override
   final int? id;
@@ -53,9 +55,8 @@ final class Exercise extends Equatable implements Model {
   final String? description;
   final PictureData? picture;
   final VideoData? video;
-  final MuscleGroup muscleGroup;
-  final TargetMuscles muscles;
-  final ExerciseWeightProgress weightProgress;
+  final ExerciseType type;
+  final ExerciseDetails details;
   final bool isFavorite;
   final Difficulty? difficulty;
   final CreatedBy createdBy;
@@ -70,9 +71,8 @@ final class Exercise extends Equatable implements Model {
     this.description,
     this.picture,
     this.video,
-    required this.muscleGroup,
-    required this.muscles,
-    required this.weightProgress,
+    required this.type,
+    required this.details,
     this.isFavorite = false,
     this.difficulty,
     required this.createdBy,
@@ -89,9 +89,8 @@ final class Exercise extends Equatable implements Model {
     ${ExerciseColumns.description.value} TEXT,
     ${ExerciseColumns.picture.value} TEXT,
     ${ExerciseColumns.video.value} TEXT,
-    ${ExerciseColumns.muscleGroup.value} TEXT NOT NULL,
-    ${ExerciseColumns.muscles.value} TEXT NOT NULL,
-    ${ExerciseColumns.weightProgress.value} TEXT NOT NULL DEFAULT '${ExerciseWeightProgress.positive.value}',
+    ${ExerciseColumns.type.value} TEXT NOT NULL DEFAULT '${ExerciseType.strength.value}',
+    ${ExerciseColumns.details.value} TEXT NOT NULL,
     ${ExerciseColumns.isFavorite.value} INTEGER NOT NULL DEFAULT 0,
     ${ExerciseColumns.difficulty.value} INTEGER,
     ${ExerciseColumns.createdBy.value} TEXT NOT NULL,
@@ -99,30 +98,31 @@ final class Exercise extends Equatable implements Model {
     ${ExerciseColumns.updatedAt.value} INTEGER NOT NULL
   );
   
-  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON $_table (${ExerciseColumns.muscleGroup.value});
+  CREATE INDEX IF NOT EXISTS idx_exercises_type ON $_table (${ExerciseColumns.type.value});
   CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_exercises_name_id ON $_table (${ExerciseColumns.name.value});
   """;
 
   @override
-  Map<String, Object?> toMap() {
-    return {
-      ExerciseColumns.id.value: id,
-      ExerciseColumns.name.value: name,
-      ExerciseColumns.description.value: description,
-      ExerciseColumns.picture.value: picture?.toJson(),
-      ExerciseColumns.video.value: video?.toJson(),
-      ExerciseColumns.muscleGroup.value: muscleGroup.value,
-      ExerciseColumns.muscles.value: muscles.toJson(),
-      ExerciseColumns.weightProgress.value: weightProgress.value,
-      ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
-      ExerciseColumns.difficulty.value: difficulty?.value,
-      ExerciseColumns.createdBy.value: createdBy.value,
-      ExerciseColumns.createdAt.value: createdAt,
-      ExerciseColumns.updatedAt.value: updatedAt,
-    };
-  }
+  Map<String, Object?> toMap() => {
+    ExerciseColumns.id.value: id,
+    ExerciseColumns.name.value: name,
+    ExerciseColumns.description.value: description,
+    ExerciseColumns.picture.value: picture?.toJson(),
+    ExerciseColumns.video.value: video?.toJson(),
+    ExerciseColumns.type.value: type.value,
+    ExerciseColumns.details.value: details.toJson(),
+    ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
+    ExerciseColumns.difficulty.value: difficulty?.value,
+    ExerciseColumns.createdBy.value: createdBy.value,
+    ExerciseColumns.createdAt.value: createdAt,
+    ExerciseColumns.updatedAt.value: updatedAt,
+  };
 
   factory Exercise.fromMap(Map<String, Object?> map) {
+    final ExerciseType type = ExerciseType.fromValue(
+      map[ExerciseColumns.type.value] as String? ?? ExerciseType.strength.value,
+    );
+
     return Exercise(
       id: map[ExerciseColumns.id.value] as int?,
       name: map[ExerciseColumns.name.value] as String,
@@ -133,15 +133,10 @@ final class Exercise extends Equatable implements Model {
       video: map[ExerciseColumns.video.value] != null
           ? VideoData.fromJson(map[ExerciseColumns.video.value] as String)
           : null,
-      muscleGroup: MuscleGroup.fromValue(
-        map[ExerciseColumns.muscleGroup.value] as String,
-      ),
-      weightProgress: ExerciseWeightProgress.fromValue(
-        map[ExerciseColumns.weightProgress.value] as String,
-      ),
-      muscles: TargetMuscles.fromJson(
-        map[ExerciseColumns.muscles.value] as String? ??
-            '{"primary":[],"secondary":[]}',
+      type: type,
+      details: ExerciseDetails.fromJson(
+        type,
+        map[ExerciseColumns.details.value] as String,
       ),
       isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
       difficulty: map[ExerciseColumns.difficulty.value] != null
@@ -157,27 +152,24 @@ final class Exercise extends Equatable implements Model {
 
   factory Exercise.create({
     required String name,
-    required MuscleGroup muscleGroup,
-    required TargetMuscles muscles,
+    required ExerciseDetails details,
     String? description,
     PictureData? picture,
     VideoData? video,
     Difficulty? difficulty,
     bool? isFavorite,
-    ExerciseWeightProgress weightProgress = ExerciseWeightProgress.positive,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Exercise(
       name: name,
-      muscleGroup: muscleGroup,
-      muscles: muscles,
       description: description,
       picture: picture,
       video: video,
+      type: details.type,
+      details: details,
       isFavorite: isFavorite ?? false,
       difficulty: difficulty,
-      weightProgress: weightProgress,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -191,26 +183,24 @@ final class Exercise extends Equatable implements Model {
     Nullable<String>? description,
     Nullable<PictureData>? picture,
     Nullable<VideoData>? video,
-    MuscleGroup? muscleGroup,
-    TargetMuscles? muscles,
+    ExerciseDetails? details,
     bool? isFavorite,
     Nullable<Difficulty>? difficulty,
-    ExerciseWeightProgress? weightProgress,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
+    final ExerciseDetails nextDetails = details ?? this.details;
     return Exercise(
       id: id != null ? id.value : this.id,
       name: name ?? this.name,
       description: description != null ? description.value : this.description,
       picture: picture != null ? picture.value : this.picture,
       video: video != null ? video.value : this.video,
-      muscleGroup: muscleGroup ?? this.muscleGroup,
-      muscles: muscles ?? this.muscles,
+      type: nextDetails.type,
+      details: nextDetails,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
-      weightProgress: weightProgress ?? this.weightProgress,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -218,9 +208,8 @@ final class Exercise extends Equatable implements Model {
   }
 
   @override
-  String toString() {
-    return 'Exercise{id: $id, name: $name, picture: $picture, video: $video, muscleGroup: $muscleGroup, muscles: $muscles, isFavorite: $isFavorite, difficulty: $difficulty, weightProgress: ${weightProgress.value}, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
-  }
+  String toString() =>
+      'Exercise{id: $id, name: $name, picture: $picture, video: $video, type: ${type.value}, details: $details, isFavorite: $isFavorite, difficulty: $difficulty, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
 
   @override
   List<Object?> get props => [
@@ -229,11 +218,10 @@ final class Exercise extends Equatable implements Model {
     description,
     picture,
     video,
-    muscleGroup,
-    muscles,
+    type,
+    details,
     isFavorite,
     difficulty,
-    weightProgress,
     createdBy,
     createdAt,
     updatedAt,

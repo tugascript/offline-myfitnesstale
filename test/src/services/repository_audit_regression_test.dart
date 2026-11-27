@@ -73,6 +73,7 @@ import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.
 import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
@@ -593,10 +594,13 @@ void main() {
       final db = await testDatabase.db;
       final exercise = Exercise.create(
         name: uniqueName('Bench'),
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(
-          primary: {Muscle.chest},
-          secondary: {Muscle.triceps},
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(
+            primary: {Muscle.chest},
+            secondary: {Muscle.triceps},
+          ),
+          weightProgress: ExerciseWeightProgress.positive,
         ),
         difficulty: Difficulty.beginner,
       );
@@ -666,10 +670,10 @@ void main() {
         Exercise.table,
         Exercise.create(
           name: uniqueName('Squat'),
-          muscleGroup: MuscleGroup.legs,
-          muscles: const TargetMuscles(
-            primary: {Muscle.quadriceps},
-            secondary: {},
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.legs,
+            muscles: TargetMuscles(primary: {Muscle.quadriceps}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
           ),
           difficulty: Difficulty.beginner,
         ).toMap(),
@@ -1539,10 +1543,13 @@ void main() {
         Exercise.table,
         Exercise.create(
           name: name,
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(
-            primary: {Muscle.chest},
-            secondary: {Muscle.triceps},
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(
+              primary: {Muscle.chest},
+              secondary: {Muscle.triceps},
+            ),
+            weightProgress: ExerciseWeightProgress.positive,
           ),
         ).toMap(),
       );

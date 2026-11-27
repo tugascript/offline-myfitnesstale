@@ -23,6 +23,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -48,8 +49,11 @@ const _skeletonExerciseOne = ExerciseDto(
   id: -1,
   name: 'Loading Exercise Name',
   description: '',
-  muscleGroup: MuscleGroup.push,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.push,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
   difficulty: Difficulty.beginner,
   createdBy: CreatedBy.system,
 );
@@ -58,8 +62,11 @@ const _skeletonExerciseTwo = ExerciseDto(
   id: -2,
   name: 'Loading Exercise Name',
   description: '',
-  muscleGroup: MuscleGroup.pull,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.pull,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
   difficulty: Difficulty.intermediate,
   createdBy: CreatedBy.system,
 );
@@ -68,8 +75,11 @@ const _skeletonExerciseThree = ExerciseDto(
   id: -3,
   name: 'Loading Exercise Name',
   description: '',
-  muscleGroup: MuscleGroup.legs,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.legs,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
   difficulty: Difficulty.advanced,
   createdBy: CreatedBy.system,
 );

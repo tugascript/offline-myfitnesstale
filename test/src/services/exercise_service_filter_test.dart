@@ -26,9 +26,11 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_i
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import 'package:sqflite/sqflite.dart';
@@ -51,11 +53,14 @@ void main() {
       Exercise.table,
       Exercise.create(
         name: name,
-        muscleGroup: muscleGroup,
+        details: StrengthExerciseDetails(
+          muscleGroup: muscleGroup,
+          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
         difficulty: difficulty,
         isFavorite: isFavorite,
         createdBy: createdBy,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
       ).toMap(),
     );
   }
@@ -342,10 +347,13 @@ void main() {
     await exerciseCubit.createExercise(
       ExerciseInput(
         name: 'Bench Press',
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(
-          primary: {Muscle.chest},
-          secondary: {Muscle.triceps},
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(
+            primary: {Muscle.chest},
+            secondary: {Muscle.triceps},
+          ),
+          weightProgress: ExerciseWeightProgress.positive,
         ),
         equipmentIds: {updatedEquipment.id},
         description: const Nullable('Flat bench press'),
@@ -362,8 +370,11 @@ void main() {
       createdExercise.id,
       const ExerciseInput(
         name: 'Push-Up',
-        muscleGroup: MuscleGroup.push,
-        muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ),
     );
     final updatedExercise = exerciseCubit.state.selectedExercise!;
@@ -411,4 +422,401 @@ void main() {
       isNull,
     );
   });
+
+  test('filters strength exercises by muscleGroup inside details JSON and excludes cardio exercises', () async {
+    final db = await testDatabase.db;
+    await createExercise(
+      db,
+      name: 'Push Press',
+      muscleGroup: MuscleGroup.push,
+      difficulty: Difficulty.beginner,
+      isFavorite: false,
+    );
+    await createExercise(
+      db,
+      name: 'Pull Up',
+      muscleGroup: MuscleGroup.pull,
+      difficulty: Difficulty.intermediate,
+      isFavorite: false,
+    );
+    await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Treadmill Run',
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        difficulty: Difficulty.beginner,
+      ).toMap(),
+    );
+
+    final paginatedPush = await service.getExercises(
+      type: ExerciseType.strength,
+      muscleGroup: MuscleGroup.push,
+    );
+    expect(paginatedPush.isOk(), isTrue);
+    expect(paginatedPush.value.total, 1);
+    expect(paginatedPush.value.data.single.name, 'Push Press');
+    expect(
+      paginatedPush.value.data.single
+          .getDetails<StrengthExerciseDetails>()
+          ?.muscleGroup,
+      MuscleGroup.push,
+    );
+
+    final allPull = await service.getAllExercises(
+      type: ExerciseType.strength,
+      muscleGroup: MuscleGroup.pull,
+    );
+    expect(allPull.isOk(), isTrue);
+    expect(allPull.value, hasLength(1));
+    expect(allPull.value.single.name, 'Pull Up');
+    expect(
+      allPull.value.single.getDetails<StrengthExerciseDetails>()?.muscleGroup,
+      MuscleGroup.pull,
+    );
+  });
+
+  test('createExercise and updateExercise persist and round-trip StrengthExerciseDetails fields', () async {
+    final created = await service.createExercise(
+      const ExerciseInput(
+        name: 'Assisted Dip',
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(
+            primary: {Muscle.triceps},
+            secondary: {Muscle.chest},
+          ),
+          weightProgress: ExerciseWeightProgress.negative,
+        ),
+      ),
+    );
+    expect(created.isOk(), isTrue);
+    expect(created.value.type, ExerciseType.strength);
+    expect(created.value.getDetails<CardioExerciseDetails>(), isNull);
+    final createdDetails = created.value.getDetails<StrengthExerciseDetails>()!;
+    expect(createdDetails.muscleGroup, MuscleGroup.push);
+    expect(createdDetails.muscles.primary, {Muscle.triceps});
+    expect(createdDetails.muscles.secondary, {Muscle.chest});
+    expect(createdDetails.weightProgress, ExerciseWeightProgress.negative);
+
+    final fetched = await service.getExercise(created.value.id);
+    expect(fetched.isOk(), isTrue);
+    final fetchedDetails = fetched.value.getDetails<StrengthExerciseDetails>()!;
+    expect(fetchedDetails.muscleGroup, MuscleGroup.push);
+    expect(fetchedDetails.muscles.primary, {Muscle.triceps});
+    expect(fetchedDetails.muscles.secondary, {Muscle.chest});
+    expect(fetchedDetails.weightProgress, ExerciseWeightProgress.negative);
+
+    final updated = await service.updateExercise(
+      created.value.id,
+      const ExerciseInput(
+        name: 'Weighted Pull-Up',
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.pull,
+          muscles: TargetMuscles(
+            primary: {Muscle.lats},
+            secondary: {Muscle.biceps},
+          ),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
+      ),
+    );
+    expect(updated.isOk(), isTrue);
+    final updatedDetails = updated.value.getDetails<StrengthExerciseDetails>()!;
+    expect(updatedDetails.muscleGroup, MuscleGroup.pull);
+    expect(updatedDetails.muscles.primary, {Muscle.lats});
+    expect(updatedDetails.muscles.secondary, {Muscle.biceps});
+    expect(updatedDetails.weightProgress, ExerciseWeightProgress.positive);
+
+    final refetched = await service.getExercise(created.value.id);
+    expect(refetched.isOk(), isTrue);
+    final refetchedDetails = refetched.value
+        .getDetails<StrengthExerciseDetails>()!;
+    expect(refetchedDetails.muscleGroup, MuscleGroup.pull);
+    expect(refetchedDetails.muscles.primary, {Muscle.lats});
+    expect(refetchedDetails.muscles.secondary, {Muscle.biceps});
+    expect(refetchedDetails.weightProgress, ExerciseWeightProgress.positive);
+  });
+
+  test('supports full offline CRUD for cardio exercises including equipment and unit trimming', () async {
+    final db = await testDatabase.db;
+    final treadmillId = await db.insert(
+      Equipment.table,
+      Equipment.create(name: 'Treadmill').toMap(),
+    );
+    final jumpRopeId = await db.insert(
+      Equipment.table,
+      Equipment.create(name: 'Jump Rope').toMap(),
+    );
+
+    final created = await service.createExercise(
+      ExerciseInput(
+        name: 'Outdoor Run',
+        description: const Nullable('Steady pace running'),
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: '  km  ',
+        ),
+        equipmentIds: {treadmillId},
+        difficulty: const Nullable(Difficulty.beginner),
+        isFavorite: true,
+      ),
+    );
+    expect(created.isOk(), isTrue);
+    expect(created.value.type, ExerciseType.cardio);
+    expect(created.value.getDetails<StrengthExerciseDetails>(), isNull);
+    final createdCardio = created.value.getDetails<CardioExerciseDetails>()!;
+    expect(createdCardio.defaultMode, CardioBaseMode.time);
+    expect(createdCardio.unitType, CardioUnitType.distance);
+    expect(createdCardio.unit, 'km');
+    expect(created.value.equipments?.map((e) => e.id), [treadmillId]);
+
+    final fetched = await service.getExercise(created.value.id);
+    expect(fetched.isOk(), isTrue);
+    expect(fetched.value.type, ExerciseType.cardio);
+    expect(fetched.value.getDetails<CardioExerciseDetails>(), createdCardio);
+
+    final updated = await service.updateExercise(
+      created.value.id,
+      ExerciseInput(
+        name: 'Double Unders',
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.units,
+          unitType: CardioUnitType.action,
+          unit: ' jumps ',
+        ),
+        equipmentIds: {jumpRopeId},
+        difficulty: const Nullable(Difficulty.advanced),
+        isFavorite: false,
+      ),
+    );
+    expect(updated.isOk(), isTrue);
+    final updatedCardio = updated.value.getDetails<CardioExerciseDetails>()!;
+    expect(updated.value.name, 'Double Unders');
+    expect(updatedCardio.defaultMode, CardioBaseMode.units);
+    expect(updatedCardio.unitType, CardioUnitType.action);
+    expect(updatedCardio.unit, 'jumps');
+    expect(updated.value.equipments?.map((e) => e.id), [jumpRopeId]);
+
+    final deleted = await service.deleteExercise(created.value.id);
+    expect(deleted.isOk(), isTrue);
+
+    final afterDelete = await service.getExercise(created.value.id);
+    expect(afterDelete.isErr(), isTrue);
+    expect(afterDelete.error.type, SingleErrorTypes.notFound);
+  });
+
+  test('filters cardio exercises by type, mode, unitType, and shared filters across repository and cubit', () async {
+    final db = await testDatabase.db;
+    final rowerId = await db.insert(
+      Equipment.table,
+      Equipment.create(name: 'Rower').toMap(),
+    );
+
+    await createExercise(
+      db,
+      name: 'Barbell Squat',
+      muscleGroup: MuscleGroup.legs,
+      difficulty: Difficulty.intermediate,
+      isFavorite: true,
+    );
+
+    final rowCardio = await service.createExercise(
+      ExerciseInput(
+        name: 'Rowing Sprint',
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.units,
+          unitType: CardioUnitType.distance,
+          unit: 'm',
+        ),
+        equipmentIds: {rowerId},
+        difficulty: const Nullable(Difficulty.intermediate),
+        isFavorite: true,
+      ),
+    );
+    expect(rowCardio.isOk(), isTrue);
+
+    final jumpCardio = await service.createExercise(
+      const ExerciseInput(
+        name: 'Jump Rope Conditioning',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.action,
+          unit: 'steps',
+        ),
+        difficulty: Nullable(Difficulty.beginner),
+        isFavorite: false,
+      ),
+      CreatedBy.system,
+    );
+    expect(jumpCardio.isOk(), isTrue);
+
+    final cardioOnly = await service.getExercises(type: ExerciseType.cardio);
+    expect(cardioOnly.isOk(), isTrue);
+    expect(cardioOnly.value.total, 2);
+    expect(
+      cardioOnly.value.data.every((e) => e.type == ExerciseType.cardio),
+      isTrue,
+    );
+
+    final strengthOnly = await service.getExercises(
+      type: ExerciseType.strength,
+    );
+    expect(strengthOnly.isOk(), isTrue);
+    expect(strengthOnly.value.total, 1);
+    expect(strengthOnly.value.data.single.name, 'Barbell Squat');
+
+    final combinedCardio = await service.getExercises(
+      name: 'Row',
+      type: ExerciseType.cardio,
+      cardioBaseMode: CardioBaseMode.units,
+      cardioUnitType: CardioUnitType.distance,
+      equipmentId: rowerId,
+      difficulty: Difficulty.intermediate,
+      isFavorite: true,
+      createdBy: CreatedBy.user,
+    );
+    expect(combinedCardio.isOk(), isTrue);
+    expect(combinedCardio.value.total, 1);
+    expect(combinedCardio.value.data.single.name, 'Rowing Sprint');
+
+    final allTimeAction = await service.getAllExercises(
+      type: ExerciseType.cardio,
+      cardioBaseMode: CardioBaseMode.time,
+      cardioUnitType: CardioUnitType.action,
+    );
+    expect(allTimeAction.isOk(), isTrue);
+    expect(allTimeAction.value, hasLength(1));
+    expect(allTimeAction.value.single.name, 'Jump Rope Conditioning');
+
+    final cubit = ExerciseCubit(exerciseRepository: service);
+    addTearDown(cubit.close);
+    await cubit.getExercises(
+      type: ExerciseType.cardio,
+      muscleGroup: MuscleGroup.push,
+      cardioBaseMode: CardioBaseMode.units,
+      cardioUnitType: CardioUnitType.distance,
+      limit: 20,
+      offset: 0,
+    );
+    expect(cubit.state.exercisePagination.type, ExerciseType.cardio);
+    expect(cubit.state.exercisePagination.muscleGroup, isNull);
+    expect(cubit.state.exercisePagination.cardioBaseMode, CardioBaseMode.units);
+    expect(
+      cubit.state.exercisePagination.cardioUnitType,
+      CardioUnitType.distance,
+    );
+    expect(cubit.state.exercises, hasLength(1));
+    expect(cubit.state.exercises.single.name, 'Rowing Sprint');
+
+    // Browse page 2 of cardio exercises (offset: 1), then fetch selection
+    // strength exercises; cardio list pagination/limit must remain untouched.
+    await cubit.getExercises(type: ExerciseType.cardio, limit: 1, offset: 0);
+    await cubit.getExercises(type: ExerciseType.cardio, limit: 1, offset: 1);
+    expect(cubit.state.exercisePagination.offset, 1);
+    expect(cubit.state.exercisePagination.limit, 1);
+
+    await cubit.getSelectionExercises(type: ExerciseType.strength);
+    expect(cubit.state.exerciseSelection, hasLength(1));
+    expect(cubit.state.exerciseSelection.single.name, 'Barbell Squat');
+    expect(cubit.state.exercisePagination.type, ExerciseType.cardio);
+    expect(cubit.state.exercisePagination.offset, 1);
+    expect(cubit.state.exercisePagination.limit, 1);
+    expect(cubit.state.exercises, hasLength(2));
+
+    // Switching list type without passing offset resets offset to 0.
+    await cubit.getExercises(type: ExerciseType.strength, limit: 20);
+    expect(cubit.state.exercisePagination.type, ExerciseType.strength);
+    expect(cubit.state.exercisePagination.offset, 0);
+    expect(cubit.state.exercises, hasLength(1));
+    expect(cubit.state.exercises.single.name, 'Barbell Squat');
+  });
+
+  test(
+    'rejects blank cardio unit and rejects changing exercise type on update',
+    () async {
+      final blankCreate = await service.createExercise(
+        const ExerciseInput(
+          name: 'Invalid Cardio',
+          details: CardioExerciseDetails(
+            defaultMode: CardioBaseMode.time,
+            unitType: CardioUnitType.distance,
+            unit: '   ',
+          ),
+        ),
+      );
+      expect(blankCreate.isErr(), isTrue);
+      expect(blankCreate.error.type, SingleErrorTypes.invalidInput);
+
+      final validStrength = await service.createExercise(
+        const ExerciseInput(
+          name: 'Overhead Press',
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.shoulders}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
+        ),
+      );
+      expect(validStrength.isOk(), isTrue);
+
+      final strengthToCardio = await service.updateExercise(
+        validStrength.value.id,
+        const ExerciseInput(
+          name: 'Overhead Press',
+          details: CardioExerciseDetails(
+            defaultMode: CardioBaseMode.time,
+            unitType: CardioUnitType.distance,
+            unit: 'km',
+          ),
+        ),
+      );
+      expect(strengthToCardio.isErr(), isTrue);
+      expect(strengthToCardio.error.type, SingleErrorTypes.invalidInput);
+
+      final validCardio = await service.createExercise(
+        const ExerciseInput(
+          name: 'Cycling',
+          details: CardioExerciseDetails(
+            defaultMode: CardioBaseMode.time,
+            unitType: CardioUnitType.distance,
+            unit: 'km',
+          ),
+        ),
+      );
+      expect(validCardio.isOk(), isTrue);
+
+      final blankUpdate = await service.updateExercise(
+        validCardio.value.id,
+        const ExerciseInput(
+          name: 'Cycling',
+          details: CardioExerciseDetails(
+            defaultMode: CardioBaseMode.time,
+            unitType: CardioUnitType.distance,
+            unit: '',
+          ),
+        ),
+      );
+      expect(blankUpdate.isErr(), isTrue);
+      expect(blankUpdate.error.type, SingleErrorTypes.invalidInput);
+
+      final cardioToStrength = await service.updateExercise(
+        validCardio.value.id,
+        const ExerciseInput(
+          name: 'Cycling',
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.legs,
+            muscles: TargetMuscles(primary: {Muscle.quadriceps}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
+        ),
+      );
+      expect(cardioToStrength.isErr(), isTrue);
+      expect(cardioToStrength.error.type, SingleErrorTypes.invalidInput);
+    },
+  );
 }

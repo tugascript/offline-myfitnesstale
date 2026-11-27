@@ -28,6 +28,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/profile_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/reminders_config_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_record_model.dart';
@@ -68,6 +70,8 @@ class TestDatabase {
     final database = await db;
     await database.transaction((txn) async {
       await txn.delete(WorkoutRecord.table);
+      await txn.delete(WorkoutCardioSetExercise.table);
+      await txn.delete(WorkoutCardioSet.table);
       await txn.delete(WorkoutSetExerciseOption.table);
       await txn.delete(WorkoutSetExercise.table);
       await txn.delete(WorkoutSet.table);

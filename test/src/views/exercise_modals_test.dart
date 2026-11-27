@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dar
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
@@ -49,6 +50,7 @@ import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_scree
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/details/cardio_exercise_details_section.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/edit_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/active_strength_goal_card.dart';
@@ -65,15 +67,28 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
   final List<ExerciseInput> createdInputs = [];
   final List<(int, ExerciseInput)> updatedCalls = [];
+  final List<({ExerciseType type, int? limit, int? offset})>
+  getExercisesCallArgs = [];
+  final List<ExerciseType?> getSelectionExercisesTypes = [];
   int getExercisesCalls = 0;
 
-  _FakeExerciseCubit({this.shouldFail = false, ExerciseDto? initialExercise})
-    : super(exerciseRepository: ExerciseRepository.create()) {
+  _FakeExerciseCubit({
+    this.shouldFail = false,
+    ExerciseDto? initialExercise,
+    List<ExerciseDto>? initialExerciseSelection,
+    ExerciseType initialType = ExerciseType.strength,
+    int initialOffset = 0,
+  }) : super(exerciseRepository: ExerciseRepository.create()) {
     emit(
       state.copyWith(
         equipmentSelection: const {1: 'Barbell', 2: 'Dumbbell'},
         exercises: initialExercise != null ? [initialExercise] : const [],
+        exerciseSelection:
+            initialExerciseSelection ??
+            (initialExercise != null ? [initialExercise] : const []),
         exercisePagination: state.exercisePagination.copyWith(
+          type: initialType,
+          offset: initialOffset,
           total: initialExercise != null ? 1 : 0,
         ),
         selectedExercise: Nullable(initialExercise),
@@ -85,9 +100,24 @@ class _FakeExerciseCubit extends ExerciseCubit {
   Future<void> getSelectionEquipments() async {}
 
   @override
+  Future<void> getSelectionExercises({
+    ExerciseType? type,
+    MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    getSelectionExercisesTypes.add(type);
+  }
+
+  @override
   Future<void> getExercises({
     String? name,
+    ExerciseType type = ExerciseType.strength,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     Difficulty? difficulty,
     int? equipmentId,
     int? limit,
@@ -96,6 +126,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
     CreatedBy? createdBy,
   }) async {
     getExercisesCalls++;
+    getExercisesCallArgs.add((type: type, limit: limit, offset: offset));
   }
 
   @override
@@ -132,10 +163,8 @@ class _FakeExerciseCubit extends ExerciseCubit {
               platform: input.video.value!.platform,
             )
           : null,
-      muscleGroup: input.muscleGroup,
-      muscles: input.muscles,
+      details: input.details,
       difficulty: input.difficulty.value,
-      weightProgress: input.weightProgress,
       isFavorite: input.isFavorite,
       equipments: input.equipmentIds
           .map(
@@ -195,10 +224,8 @@ class _FakeExerciseCubit extends ExerciseCubit {
               platform: input.video.value!.platform,
             )
           : null,
-      muscleGroup: input.muscleGroup,
-      muscles: input.muscles,
+      details: input.details,
       difficulty: input.difficulty.value,
-      weightProgress: input.weightProgress,
       isFavorite: input.isFavorite,
       equipments: input.equipmentIds
           .map(
@@ -354,10 +381,13 @@ ExerciseDto _sampleExercise({
     description: 'Press bar upward',
     picture: picture,
     video: video,
-    muscleGroup: MuscleGroup.push,
-    muscles: const TargetMuscles(
-      primary: {Muscle.chest},
-      secondary: {Muscle.triceps},
+    details: const StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: {Muscle.triceps},
+      ),
+      weightProgress: ExerciseWeightProgress.positive,
     ),
     equipments: const [
       EquipmentDto(id: 1, name: 'Barbell', createdBy: CreatedBy.system),
@@ -417,7 +447,9 @@ void main() {
 
       expect(cubit.createdInputs, hasLength(1));
       expect(cubit.createdInputs.first.name, 'Incline Dumbbell Press');
-      expect(cubit.createdInputs.first.muscleGroup, MuscleGroup.push);
+      final createdDetails =
+          cubit.createdInputs.first.details as StrengthExerciseDetails;
+      expect(createdDetails.muscleGroup, MuscleGroup.push);
       expect(find.byType(CreateExerciseModal), findsNothing);
       expect(find.text('Incline Dumbbell Press'), findsOneWidget);
     },
@@ -548,7 +580,10 @@ void main() {
       final (updatedId, updatedInput) = cubit.updatedCalls.first;
       expect(updatedId, 12);
       expect(updatedInput.name, 'Spoto Press');
-      expect(updatedInput.muscleGroup, MuscleGroup.push);
+      expect(
+        (updatedInput.details as StrengthExerciseDetails).muscleGroup,
+        MuscleGroup.push,
+      );
       expect(updatedInput.isFavorite, isTrue);
       expect(updatedInput.picture.value?.uri, 'larsen.png');
       expect(updatedInput.picture.value?.storage, PictureStorage.files);
@@ -826,9 +861,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(cubit.createdInputs, hasLength(1));
-      expect(cubit.createdInputs.first.muscleGroup, MuscleGroup.legs);
-      expect(cubit.createdInputs.first.muscles.primary, {Muscle.quadriceps});
-      expect(cubit.createdInputs.first.muscles.secondary, isEmpty);
+      final createdDetails =
+          cubit.createdInputs.first.details as StrengthExerciseDetails;
+      expect(createdDetails.muscleGroup, MuscleGroup.legs);
+      expect(createdDetails.muscles.primary, {Muscle.quadriceps});
+      expect(createdDetails.muscles.secondary, isEmpty);
     },
   );
 
@@ -839,10 +876,13 @@ void main() {
         id: 21,
         name: 'Barbell Deadlift',
         description: 'Lift bar from floor',
-        muscleGroup: MuscleGroup.legs,
-        muscles: const TargetMuscles(
-          primary: {Muscle.hamstrings, Muscle.glutes},
-          secondary: {Muscle.lowerBack, Muscle.forearms},
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.legs,
+          muscles: TargetMuscles(
+            primary: {Muscle.hamstrings, Muscle.glutes},
+            secondary: {Muscle.lowerBack, Muscle.forearms},
+          ),
+          weightProgress: ExerciseWeightProgress.positive,
         ),
         equipments: const [],
         difficulty: Difficulty.intermediate,
@@ -1740,6 +1780,291 @@ void main() {
         paginatedCubit.getStrengthGoalsCalls.any((call) => call.$2 == 10),
         isTrue,
       );
+    },
+  );
+
+  testWidgets(
+    'CreateExerciseModal switches to Cardio fields, validates empty unit, and submits CardioExerciseDetails',
+    (tester) async {
+      final cubit = _FakeExerciseCubit(initialExercise: _sampleExercise());
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: const MaterialApp(home: ExercisesListScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('exercise-add')));
+      await tester.pumpAndSettle();
+
+      // Switch type toggle inside the form to Cardio.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-form-type-toggle')),
+          matching: find.text('Cardio'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('exercise-form-cardio-mode')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-form-cardio-unit-type')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-form-cardio-unit')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(CreateExerciseModal),
+          matching: find.byType(DropdownButtonFormField<MuscleGroup?>),
+        ),
+        findsNothing,
+      );
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(CreateExerciseModal),
+          matching: find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.labelText == 'Name',
+          ),
+        ),
+        'Rowing Machine',
+      );
+
+      // Submit with blank unit triggers validation error.
+      final createButton = find.text('CREATE EXERCISE');
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please enter a unit'), findsOneWidget);
+      expect(cubit.createdInputs, isEmpty);
+
+      // Select Units mode, Action unit type, and enter valid unit.
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('exercise-form-cardio-mode')),
+      );
+      await tester.tap(find.byKey(const ValueKey('exercise-form-cardio-mode')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Units').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('exercise-form-cardio-unit-type')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Action').last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('exercise-form-cardio-unit')),
+        'strokes',
+      );
+
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, hasLength(1));
+      expect(cubit.createdInputs.first.name, 'Rowing Machine');
+      expect(
+        cubit.createdInputs.first.details,
+        const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.units,
+          unitType: CardioUnitType.action,
+          unit: 'strokes',
+        ),
+      );
+      expect(find.byType(CreateExerciseModal), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ExerciseDetailScreen renders cardio details, hides strength-only actions, and EditExerciseModal locks type and updates cardio fields',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const cardioExercise = ExerciseDto(
+        id: 44,
+        name: 'Outdoor Run',
+        description: 'Easy zone 2 run',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        equipments: [
+          EquipmentDto(id: 2, name: 'Running Shoes', createdBy: CreatedBy.user),
+        ],
+        difficulty: Difficulty.beginner,
+        isFavorite: true,
+        createdBy: CreatedBy.user,
+      );
+      final cubit = _FakeExerciseCubit(initialExercise: cardioExercise);
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/44',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 44),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: child!,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+      expect(find.text('Mode: Time'), findsOneWidget);
+      expect(find.text('Unit Type: Distance'), findsOneWidget);
+      expect(find.text('Unit: km'), findsOneWidget);
+      expect(find.text('Running Shoes'), findsOneWidget);
+      expect(find.text('LOG PROGRESS'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('exercise-create-goal-button')),
+        findsNothing,
+      );
+      expect(find.text('EDIT'), findsOneWidget);
+      expect(find.text('DELETE'), findsOneWidget);
+
+      // Open EditExerciseModal at standard scale to interact with fields cleanly.
+      tester.view.physicalSize = const Size(430, 932);
+      await tester.pumpAndSettle();
+
+      final editButton = find.text('EDIT');
+      await tester.ensureVisible(editButton);
+      await tester.tap(editButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditExerciseModal), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('exercise-form-type-toggle')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-form-locked-type')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-form-locked-type')),
+          matching: find.text('Cardio'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('exercise-form-cardio-unit')),
+        'miles',
+      );
+      final updateButton = find.text('UPDATE EXERCISE');
+      await tester.ensureVisible(updateButton);
+      await tester.tap(updateButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.updatedCalls, hasLength(1));
+      expect(cubit.updatedCalls.first.$1, 44);
+      expect(
+        cubit.updatedCalls.first.$2.details,
+        const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'miles',
+        ),
+      );
+      expect(find.byType(EditExerciseModal), findsNothing);
+      expect(find.text('Unit: miles'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal loads strength options via getSelectionExercises without mutating cardio list pagination',
+    (tester) async {
+      const cardioExercise = ExerciseDto(
+        id: 77,
+        name: 'Treadmill Run',
+        description: '',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        createdBy: CreatedBy.user,
+      );
+      final strengthExercise = _sampleExercise(id: 88, name: 'Deadlift');
+      final exerciseCubit = _FakeExerciseCubit(
+        initialExercise: cardioExercise,
+        initialExerciseSelection: [strengthExercise, cardioExercise],
+        initialType: ExerciseType.cardio,
+        initialOffset: 20,
+      );
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final initialPagination = exerciseCubit.state.exercisePagination;
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(exerciseCubit.getSelectionExercisesTypes, [ExerciseType.strength]);
+      expect(exerciseCubit.getExercisesCalls, 0);
+      expect(exerciseCubit.state.exercisePagination, initialPagination);
+
+      // Dropdown only exposes strength options from exerciseSelection.
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-exercise-dropdown')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Deadlift'), findsWidgets);
+      expect(find.text('Treadmill Run'), findsNothing);
     },
   );
 }

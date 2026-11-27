@@ -22,6 +22,7 @@ import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/workout_record_state.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
@@ -308,10 +309,13 @@ void main() {
       const exercise = ExerciseDto(
         id: 1,
         name: 'Incline Dumbbell Bench Press',
-        muscleGroup: MuscleGroup.full,
-        muscles: TargetMuscles(
-          primary: {Muscle.chest},
-          secondary: {Muscle.triceps},
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.full,
+          muscles: TargetMuscles(
+            primary: {Muscle.chest},
+            secondary: {Muscle.triceps},
+          ),
+          weightProgress: ExerciseWeightProgress.positive,
         ),
         difficulty: Difficulty.intermediateAdvanced,
         description: '',
@@ -341,6 +345,56 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Cardio ExerciseCard renders CardioExerciseBadge without overflow on narrow screens at 200% text scale',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+      const exercise = ExerciseDto(
+        id: 2,
+        name: 'Outdoor Tempo Run',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        difficulty: Difficulty.intermediate,
+        description: '',
+        isFavorite: true,
+        createdBy: CreatedBy.user,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2.0)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ExerciseCard(
+                theme: Theme.of(context),
+                exercise: exercise,
+                onTap: () {},
+                sizes: sizes,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Outdoor Tempo Run'), findsOneWidget);
+      expect(find.text('Time • km'), findsOneWidget);
     },
   );
 }

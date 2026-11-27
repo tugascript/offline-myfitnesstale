@@ -42,11 +42,27 @@ const _skeletonWorkout = WorkoutDto(
   createdBy: CreatedBy.system,
 );
 
+const _skeletonCardioWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Cardio Workout...',
+  muscleGroups: {},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 4,
+  totalReps: 0,
+  editorType: EditorType.cardio,
+  createdBy: CreatedBy.system,
+);
+
 void _noopTap() {}
 
 class WorkoutsList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final bool isReloading;
+  final ExerciseType skeletonType;
   final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
   final ScrollController? scrollController;
@@ -55,6 +71,8 @@ class WorkoutsList extends StatelessWidget {
     super.key,
     required this.sizes,
     required this.isLoading,
+    this.isReloading = false,
+    this.skeletonType = ExerciseType.strength,
     required this.workouts,
     required this.pagination,
     this.scrollController,
@@ -62,51 +80,58 @@ class WorkoutsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isLoading && workouts.isEmpty) {
+    final showSkeletonList = isReloading || (isLoading && workouts.isEmpty);
+
+    if (!showSkeletonList && workouts.isEmpty) {
       return NotFoundList(sizes: sizes, name: 'workouts');
     }
 
-    final isInitialLoading = isLoading && workouts.isEmpty;
+    final skeletonWorkout = skeletonType == ExerciseType.cardio
+        ? _skeletonCardioWorkout
+        : _skeletonWorkout;
 
-    return Skeletonizer(
-      enabled: isInitialLoading,
-      child: ListView.builder(
-        controller: scrollController,
-        // Remove shrinkWrap and physics to allow normal scrolling behavior in Expanded
-        itemCount: isInitialLoading ? 3 : workouts.length + (isLoading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (isInitialLoading) {
-            return WorkoutCard(
-              workout: _skeletonWorkout,
+    final listView = ListView.builder(
+      controller: scrollController,
+      // Remove shrinkWrap and physics to allow normal scrolling behavior in Expanded
+      itemCount: showSkeletonList ? 3 : workouts.length + (isLoading ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (showSkeletonList) {
+          return WorkoutCard(
+            workout: skeletonWorkout,
+            sizes: sizes,
+            onTap: _noopTap,
+          );
+        }
+
+        if (index == workouts.length) {
+          return Skeletonizer(
+            enabled: true,
+            child: WorkoutCard(
+              workout: skeletonWorkout,
               sizes: sizes,
               onTap: _noopTap,
-            );
-          }
-
-          if (index == workouts.length) {
-            return Skeletonizer(
-              enabled: true,
-              child: WorkoutCard(
-                workout: _skeletonWorkout,
-                sizes: sizes,
-                onTap: _noopTap,
-              ),
-            );
-          }
-
-          final workout = workouts[index];
-          return WorkoutCard(
-            workout: workout,
-            sizes: sizes,
-            onTap: () => context.push(
-              Routes.workoutDetail.name.replaceFirst(
-                ":id",
-                workout.id.toString(),
-              ),
             ),
           );
-        },
-      ),
+        }
+
+        final workout = workouts[index];
+        return WorkoutCard(
+          workout: workout,
+          sizes: sizes,
+          onTap: () => context.push(
+            Routes.workoutDetail.name.replaceFirst(
+              ":id",
+              workout.id.toString(),
+            ),
+          ),
+        );
+      },
     );
+
+    if (showSkeletonList) {
+      return Skeletonizer(enabled: true, child: listView);
+    }
+
+    return listView;
   }
 }

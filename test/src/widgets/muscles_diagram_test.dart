@@ -27,6 +27,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
@@ -162,10 +163,13 @@ void main() {
           id: 1,
           name: 'Incline Barbell Bench Press',
           description: 'Press the barbell upward from an incline bench.',
-          muscleGroup: MuscleGroup.push,
-          muscles: TargetMuscles(
-            primary: {Muscle.upperChest, Muscle.chest},
-            secondary: {Muscle.triceps, Muscle.frontDelts},
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(
+              primary: {Muscle.upperChest, Muscle.chest},
+              secondary: {Muscle.triceps, Muscle.frontDelts},
+            ),
+            weightProgress: ExerciseWeightProgress.positive,
           ),
           equipments: [
             EquipmentDto(id: 1, name: 'Barbell', createdBy: CreatedBy.system),

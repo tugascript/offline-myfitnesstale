@@ -22,6 +22,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -36,14 +37,31 @@ import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
+import '../widgets/details/exercise_skeleton_placeholder.dart';
 import '../widgets/strength_goal/create_strength_goal_modal.dart';
 
-const _skeletonExercise = ExerciseDto(
+const _skeletonStrengthExercise = ExerciseDto(
   id: 0,
   name: 'Loading Exercise Name',
   description: 'Loading exercise description placeholder...',
-  muscleGroup: MuscleGroup.push,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.push,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
+  difficulty: Difficulty.beginner,
+  createdBy: CreatedBy.system,
+);
+
+const _skeletonCardioExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Cardio Exercise',
+  description: 'Loading exercise description placeholder...',
+  details: CardioExerciseDetails(
+    defaultMode: CardioBaseMode.time,
+    unitType: CardioUnitType.distance,
+    unit: 'km',
+  ),
   difficulty: Difficulty.beginner,
   createdBy: CreatedBy.system,
 );
@@ -52,8 +70,24 @@ class ExerciseDetailScreen extends StatefulWidget {
   static const name = "exercise-detail";
 
   final int exerciseId;
+  final ExerciseType? exerciseType;
 
-  const ExerciseDetailScreen({super.key, required this.exerciseId});
+  const ExerciseDetailScreen({
+    super.key,
+    required this.exerciseId,
+    this.exerciseType,
+  });
+
+  static String location(int exerciseId, {ExerciseType? type}) {
+    final base = Routes.exerciseDetail.name.replaceFirst(
+      ':id',
+      exerciseId.toString(),
+    );
+    if (type == null) {
+      return base;
+    }
+    return '$base?type=${type.value}';
+  }
 
   @override
   State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
@@ -64,6 +98,28 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   void initState() {
     super.initState();
     context.read<ExerciseCubit>().getExercise(widget.exerciseId);
+  }
+
+  ExerciseType? _resolveSkeletonType(ExerciseState exerciseState) {
+    for (final item in exerciseState.exercises) {
+      if (item.id == widget.exerciseId) {
+        return item.type;
+      }
+    }
+    final relatedExercises = exerciseState.selectedEquipment?.relatedExercises;
+    if (relatedExercises != null) {
+      for (final item in relatedExercises) {
+        if (item.id == widget.exerciseId) {
+          return item.type;
+        }
+      }
+    }
+    for (final item in exerciseState.exerciseSelection) {
+      if (item.id == widget.exerciseId) {
+        return item.type;
+      }
+    }
+    return widget.exerciseType;
   }
 
   void _toggleFavorite(bool isFavorite) {
@@ -99,24 +155,30 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ExerciseCubit, ExerciseState>(
+      listenWhen: (previous, current) {
+        final hasNewError =
+            previous.error != current.error && current.error != null;
+        final wasDeleted =
+            !current.isLoading &&
+            current.error == null &&
+            current.selectedExercise == null &&
+            current.exercises.isEmpty;
+        return hasNewError || wasDeleted;
+      },
       listener: (context, state) {
-        if (state.isLoading) {
-          return;
-        }
-
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: ${state.error}'),
+              content: Text(state.error!.description),
               backgroundColor: Colors.red,
             ),
           );
+          return;
         }
         // Navigate back if exercise was deleted
         if (state.selectedExercise == null &&
             state.exercises.isEmpty &&
-            !state.isLoading &&
-            state.error == null) {
+            !state.isLoading) {
           context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -158,8 +220,26 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           );
         }
 
+        final skeletonType = isSkeletonLoading
+            ? _resolveSkeletonType(exerciseState)
+            : null;
+
+        if (isSkeletonLoading && skeletonType == null) {
+          return ResponsiveScaffold(
+            title: "Exercise Details",
+            isEntity: false,
+            showBackButton: true,
+            body: Skeletonizer(
+              enabled: true,
+              child: ExerciseSkeletonPlaceholder(sizes: sizes),
+            ),
+          );
+        }
+
         final exercise = isSkeletonLoading
-            ? _skeletonExercise
+            ? (skeletonType == ExerciseType.cardio
+                  ? _skeletonCardioExercise
+                  : _skeletonStrengthExercise)
             : exerciseState.selectedExercise!;
 
         return ResponsiveScaffold(
@@ -195,55 +275,59 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     SizedBox(height: sizes.spacing * 1.25),
                   ],
 
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppElevatedButton(
-                          theme: theme,
-                          isLoading: exerciseState.isLoading,
-                          sizes: sizes,
-                          onPressed: () {
-                            context.push(
-                              Routes.exerciseRecords.name.replaceFirst(
-                                ":id",
-                                exercise.id.toString(),
-                              ),
-                            );
-                          },
-                          label: 'Log Progress',
-                          icon: Icons.history,
+                  // Action Buttons (Strength-only progress & goal tracking)
+                  if (!isSkeletonLoading &&
+                      exercise.type == ExerciseType.strength) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppElevatedButton(
+                            theme: theme,
+                            isLoading: exerciseState.isLoading,
+                            sizes: sizes,
+                            onPressed: () {
+                              context.push(
+                                Routes.exerciseRecords.name.replaceFirst(
+                                  ":id",
+                                  exercise.id.toString(),
+                                ),
+                              );
+                            },
+                            label: 'Log Progress',
+                            icon: Icons.history,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: sizes.spacing),
-                      Expanded(
-                        child: AppElevatedButton(
-                          key: const ValueKey('exercise-create-goal-button'),
-                          theme: theme,
-                          isLoading: exerciseState.isLoading,
-                          isSecondary: true,
-                          sizes: sizes,
-                          onPressed: () async {
-                            final created = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => CreateStrengthGoalModal(
-                                theme: theme,
-                                sizes: sizes,
-                                exerciseId: exercise.id,
-                              ),
-                            );
-                            if (created == true && context.mounted) {
-                              context.push(Routes.strengthGoals.name);
-                            }
-                          },
-                          label: 'Create Goal',
-                          icon: Icons.emoji_events,
+                        SizedBox(width: sizes.spacing),
+                        Expanded(
+                          child: AppElevatedButton(
+                            key: const ValueKey('exercise-create-goal-button'),
+                            theme: theme,
+                            isLoading: exerciseState.isLoading,
+                            isSecondary: true,
+                            sizes: sizes,
+                            onPressed: () async {
+                              final created = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => CreateStrengthGoalModal(
+                                  theme: theme,
+                                  sizes: sizes,
+                                  exerciseId: exercise.id,
+                                ),
+                              );
+                              if (created == true && context.mounted) {
+                                context.push(Routes.strengthGoals.name);
+                              }
+                            },
+                            label: 'Create Goal',
+                            icon: Icons.emoji_events,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    if (exercise.createdBy == CreatedBy.user)
+                      SizedBox(height: sizes.spacing),
+                  ],
                   if (exercise.createdBy == CreatedBy.user) ...[
-                    SizedBox(height: sizes.spacing),
                     Row(
                       children: [
                         Expanded(

@@ -36,6 +36,7 @@ import '../../services/permissions/permissions_service.dart';
 import '../../services/sqlite/dao.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../core/repository.dart';
 import '../exercises/dtos/equipment_dto.dart';
 import '../exercises/dtos/exercise_dto.dart';
@@ -189,14 +190,16 @@ final class OnboardingRepository implements Repository {
             .map(
               (exercise) => ExerciseInput(
                 name: exercise.name,
-                muscleGroup: exercise.muscleGroup,
-                muscles: exercise.muscles,
+                details: StrengthExerciseDetails(
+                  muscleGroup: exercise.muscleGroup,
+                  muscles: exercise.muscles,
+                  weightProgress: exercise.weightProgress,
+                ),
                 equipmentIds: exercise.equipments
                     .map((name) => equipmentByName[name]?.id)
                     .nonNulls
                     .toSet(),
                 difficulty: Nullable(exercise.difficulty),
-                weightProgress: exercise.weightProgress,
               ),
             )
             .toList(),

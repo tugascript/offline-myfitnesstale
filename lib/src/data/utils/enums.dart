@@ -31,7 +31,8 @@ enum CreatedBy {
 
 enum EditorType {
   basic("basic"),
-  advanced("advanced");
+  advanced("advanced"),
+  cardio("cardio");
 
   final String value;
 
@@ -531,6 +532,20 @@ enum BackupSchedule {
   );
 }
 
+enum ExerciseType {
+  strength("strength"),
+  cardio("cardio");
+
+  final String value;
+
+  const ExerciseType(this.value);
+
+  factory ExerciseType.fromValue(String v) => ExerciseType.values.firstWhere(
+    (t) => t.value == v,
+    orElse: () => ExerciseType.strength,
+  );
+}
+
 enum ExerciseWeightProgress {
   positive("positive"),
   negative("negative");
@@ -539,11 +554,49 @@ enum ExerciseWeightProgress {
 
   const ExerciseWeightProgress(this.value);
 
-  static ExerciseWeightProgress fromValue(String v) =>
+  factory ExerciseWeightProgress.fromValue(String v) =>
       ExerciseWeightProgress.values.firstWhere(
         (s) => s.value == v,
         orElse: () => ExerciseWeightProgress.positive,
       );
+}
+
+enum CardioUnitType {
+  distance("distance"),
+  action("action");
+
+  final String value;
+
+  const CardioUnitType(this.value);
+
+  factory CardioUnitType.fromValue(String v) => CardioUnitType.values
+      .firstWhere((t) => t.value == v, orElse: () => CardioUnitType.distance);
+}
+
+enum CardioBaseMode {
+  time("time"),
+  units("units");
+
+  final String value;
+
+  const CardioBaseMode(this.value);
+
+  factory CardioBaseMode.fromValue(String v) => CardioBaseMode.values
+      .firstWhere((t) => t.value == v, orElse: () => CardioBaseMode.time);
+}
+
+enum CardioSetType {
+  constant("constant"),
+  interval("interval");
+
+  final String value;
+
+  const CardioSetType(this.value);
+
+  factory CardioSetType.fromValue(String v) => CardioSetType.values.firstWhere(
+    (t) => t.value == v,
+    orElse: () => CardioSetType.constant,
+  );
 }
 
 enum EquipmentRarity {

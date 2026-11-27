@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dar
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
@@ -479,8 +480,11 @@ void main() {
       await cubit.createExercise(
         ExerciseInput(
           name: 'Bench Press',
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
           equipmentIds: {barbellId},
           isFavorite: true,
         ),
@@ -489,10 +493,10 @@ void main() {
       await cubit.createExercise(
         ExerciseInput(
           name: 'Overhead Press',
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(
-            primary: {Muscle.shoulders},
-            secondary: {},
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.shoulders}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
           ),
           equipmentIds: {barbellId},
           isFavorite: true,
@@ -512,6 +516,49 @@ void main() {
       expect(cubit.state.exercisePagination.total, 1);
       expect(cubit.state.selectedExercise?.id, secondId);
       expect(cubit.state.selectedExercise?.isFavorite, isFalse);
+    });
+
+    test('ExerciseCubit clears prior error before retrying updateExercise and updateExerciseFavorite', () async {
+      final cubit = ExerciseCubit(
+        exerciseRepository: ExerciseRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      final emittedErrors = <ErrorState?>[];
+      final subscription = cubit.stream.listen(
+        (state) => emittedErrors.add(state.error),
+      );
+      addTearDown(subscription.cancel);
+
+      const missingId = 999999;
+      final invalidInput = ExerciseInput(
+        name: 'Missing Exercise',
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
+      );
+
+      await cubit.updateExercise(missingId, invalidInput);
+      await Future<void>.delayed(Duration.zero);
+      final firstUpdateError = cubit.state.error;
+      expect(firstUpdateError, isNotNull);
+
+      emittedErrors.clear();
+      await cubit.updateExercise(missingId, invalidInput);
+      await Future<void>.delayed(Duration.zero);
+      expect(emittedErrors, [null, firstUpdateError]);
+
+      await cubit.updateExerciseFavorite(missingId, true);
+      await Future<void>.delayed(Duration.zero);
+      final firstFavoriteError = cubit.state.error;
+      expect(firstFavoriteError, isNotNull);
+
+      emittedErrors.clear();
+      await cubit.updateExerciseFavorite(missingId, true);
+      await Future<void>.delayed(Duration.zero);
+      expect(emittedErrors, [null, firstFavoriteError]);
     });
 
     test('WorkoutPlanCubit updates plans in-place, preserves loaded weeks, clears stale errors, and enforces WorkoutPlanState equality', () async {

@@ -20,45 +20,40 @@ import 'package:equatable/equatable.dart';
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/exercise_model.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/exercise_details.dart';
 import '../../../utils/json_data.dart';
 import '../../core/inputs/input.dart';
 
 final class ExerciseInput extends Equatable implements ModelInput<Exercise> {
   final String name;
-  final MuscleGroup muscleGroup;
-  final TargetMuscles muscles;
+  final ExerciseDetails details;
   final Set<int> equipmentIds;
   final Nullable<String> description;
   final Nullable<PictureData> picture;
   final Nullable<VideoData> video;
   final Nullable<Difficulty> difficulty;
-  final ExerciseWeightProgress weightProgress;
   final bool isFavorite;
 
   const ExerciseInput({
     required this.name,
-    required this.muscleGroup,
-    required this.muscles,
+    required this.details,
     this.equipmentIds = const <int>{},
     this.description = const Nullable<String>(null),
     this.picture = const Nullable<PictureData>(null),
     this.video = const Nullable<VideoData>(null),
     this.difficulty = const Nullable<Difficulty>(null),
-    this.weightProgress = ExerciseWeightProgress.positive,
     this.isFavorite = false,
   });
 
   @override
   List<Object?> get props => [
     name,
-    muscleGroup,
-    muscles,
+    details,
     equipmentIds,
     description,
     picture,
     video,
     difficulty,
-    weightProgress,
     isFavorite,
   ];
 }

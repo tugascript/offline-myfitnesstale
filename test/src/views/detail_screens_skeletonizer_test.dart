@@ -35,13 +35,17 @@ import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_ex
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/screens/loading_screen.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_carousel.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/equipment_details_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/details/cardio_exercise_details_section.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/details/exercise_skeleton_placeholder.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
@@ -201,8 +205,11 @@ WorkoutDto _sampleWorkout({int id = 1, String name = 'Push Day'}) {
               id: 101,
               name: 'Bench Press',
               description: '',
-              muscleGroup: MuscleGroup.push,
-              muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+              details: StrengthExerciseDetails(
+                muscleGroup: MuscleGroup.push,
+                muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+                weightProgress: ExerciseWeightProgress.positive,
+              ),
               createdBy: CreatedBy.system,
             ),
           ),
@@ -497,8 +504,11 @@ void main() {
       id: id,
       name: name,
       description: 'Compound chest movement',
-      muscleGroup: MuscleGroup.push,
-      muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+      details: const StrengthExerciseDetails(
+        muscleGroup: MuscleGroup.push,
+        muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+        weightProgress: ExerciseWeightProgress.positive,
+      ),
       difficulty: Difficulty.intermediate,
       equipments: const [
         EquipmentDto(id: 1, name: 'Barbell', createdBy: CreatedBy.system),
@@ -527,9 +537,15 @@ void main() {
       WidgetTester tester, {
       required _TestExerciseCubit cubit,
       int exerciseId = 1,
+      ExerciseType? exerciseType,
       double textScale = 1.0,
     }) async {
-      final router = _routerFor(ExerciseDetailScreen(exerciseId: exerciseId));
+      final router = _routerFor(
+        ExerciseDetailScreen(
+          exerciseId: exerciseId,
+          exerciseType: exerciseType,
+        ),
+      );
       addTearDown(cubit.close);
       addTearDown(router.dispose);
 
@@ -547,6 +563,24 @@ void main() {
         ),
       );
       await tester.pump();
+    }
+
+    ExerciseDto sampleCardioExercise({
+      int id = 44,
+      String name = 'Outdoor Run',
+    }) {
+      return ExerciseDto(
+        id: id,
+        name: name,
+        description: 'Steady cardio session',
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        difficulty: Difficulty.beginner,
+        createdBy: CreatedBy.user,
+      );
     }
 
     testWidgets(
@@ -570,6 +604,9 @@ void main() {
           ),
           findsOneWidget,
         );
+        expect(find.byType(ExerciseSkeletonPlaceholder), findsOneWidget);
+        expect(find.byType(MusclesCarousel), findsNothing);
+        expect(find.byType(CardioExerciseDetailsSection), findsNothing);
 
         cubit.pending!.complete();
         await tester.pumpAndSettle();
@@ -582,6 +619,136 @@ void main() {
         );
         expect(find.textContaining('BENCH PRESS'), findsOneWidget);
         expect(find.text('Compound chest movement'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows cardio skeleton when cardio exercise is cached in exercises list',
+      (tester) async {
+        final cardioExercise = sampleCardioExercise();
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = cardioExercise;
+        cubit.emit(cubit.state.copyWith(exercises: [cardioExercise]));
+
+        await pumpExerciseScreen(tester, cubit: cubit, exerciseId: 44);
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Skeletonizer &&
+                widget.enabled &&
+                widget.ignorePointers,
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+        expect(find.byType(MusclesCarousel), findsNothing);
+        expect(find.byType(ExerciseSkeletonPlaceholder), findsNothing);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('OUTDOOR RUN'), findsOneWidget);
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows cardio skeleton when cardio exercise is cached in selected equipment related exercises',
+      (tester) async {
+        final cardioExercise = sampleCardioExercise(id: 45, name: 'Rowing');
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = cardioExercise;
+        cubit.emit(
+          cubit.state.copyWith(
+            selectedEquipment: Nullable(
+              SelectedEquipment(
+                equipment: const EquipmentDto(
+                  id: 9,
+                  name: 'Rower',
+                  createdBy: CreatedBy.system,
+                ),
+                relatedExercises: [cardioExercise],
+              ),
+            ),
+          ),
+        );
+
+        await pumpExerciseScreen(tester, cubit: cubit, exerciseId: 45);
+
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+        expect(find.byType(MusclesCarousel), findsNothing);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('ROWING'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows cardio skeleton when exerciseType is cardio on cold load',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleCardioExercise();
+
+        await pumpExerciseScreen(
+          tester,
+          cubit: cubit,
+          exerciseId: 44,
+          exerciseType: ExerciseType.cardio,
+        );
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && widget.enabled,
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+        expect(find.byType(MusclesCarousel), findsNothing);
+        expect(find.byType(ExerciseSkeletonPlaceholder), findsNothing);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('OUTDOOR RUN'), findsOneWidget);
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows strength skeleton when strength exercise is cached or exerciseType is strength',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(
+          tester,
+          cubit: cubit,
+          exerciseId: 1,
+          exerciseType: ExerciseType.strength,
+        );
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && widget.enabled,
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(MusclesCarousel), findsOneWidget);
+        expect(find.byType(CardioExerciseDetailsSection), findsNothing);
+        expect(find.byType(ExerciseSkeletonPlaceholder), findsNothing);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('BENCH PRESS'), findsOneWidget);
+        expect(find.byType(MusclesCarousel), findsOneWidget);
       },
     );
 
@@ -632,7 +799,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Exercise Not Found'), findsOneWidget);
-      expect(find.text('Exercise not found'), findsOneWidget);
+      expect(find.text('Exercise not found'), findsAtLeastNWidgets(1));
     });
 
     testWidgets(
@@ -655,6 +822,142 @@ void main() {
         cubit.pending!.complete();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'cardio skeleton state fits narrow screens at 200% text scaling without overflow',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 740);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleCardioExercise();
+
+        await pumpExerciseScreen(
+          tester,
+          cubit: cubit,
+          exerciseId: 44,
+          exerciseType: ExerciseType.cardio,
+          textScale: 2.0,
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+
+        expect(find.byType(CardioExerciseDetailsSection), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'hides strength-only actions during skeleton load and when cardio exercise loads',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleCardioExercise();
+
+        await pumpExerciseScreen(
+          tester,
+          cubit: cubit,
+          exerciseId: 44,
+          exerciseType: ExerciseType.cardio,
+        );
+
+        expect(find.text('Log Progress'), findsNothing);
+        expect(find.text('Create Goal'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('exercise-create-goal-button')),
+          findsNothing,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('OUTDOOR RUN'), findsOneWidget);
+        expect(find.text('Log Progress'), findsNothing);
+        expect(find.text('Create Goal'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'shows error snackbar even when a background list query keeps state.isLoading true',
+      (tester) async {
+        final cubit = _TestExerciseCubit()..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit);
+        await tester.pumpAndSettle();
+
+        cubit.emit(
+          cubit.state.copyWith(
+            pendingExercisesQuery: Nullable(
+              ExercisePagination.initial().copyWith(type: ExerciseType.cardio),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(cubit.state.isLoading, isTrue);
+
+        cubit.emit(
+          cubit.state.copyWith(
+            error: const Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: 'Failed to update exercise',
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Failed to update exercise'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows error snackbar again when a retried operation clears prior error and emits identical ErrorState',
+      (tester) async {
+        final cubit = _TestExerciseCubit()..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit);
+        await tester.pumpAndSettle();
+
+        const failure = ErrorState(
+          type: 'operationFailure',
+          description: 'Failed to update exercise favorite',
+        );
+
+        cubit.emit(cubit.state.copyWith(error: const Nullable(failure)));
+        await tester.pumpAndSettle();
+        expect(find.text('Failed to update exercise favorite'), findsOneWidget);
+
+        ScaffoldMessenger.of(tester.element(find.byType(ExerciseDetailScreen)))
+            .clearSnackBars();
+        await tester.pumpAndSettle();
+        expect(find.byType(SnackBar), findsNothing);
+
+        // Retry starts (clears prior error) and fails with an identical error.
+        cubit.emit(
+          cubit.state.copyWith(isLoading: true, error: const Nullable(null)),
+        );
+        await tester.pump();
+        cubit.emit(
+          cubit.state.copyWith(
+            isLoading: false,
+            error: const Nullable(failure),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Failed to update exercise favorite'), findsOneWidget);
       },
     );
   });

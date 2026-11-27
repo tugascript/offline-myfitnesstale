@@ -18,11 +18,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/difficulty_badge.dart';
 import '../../core/widgets/layout/list_card.dart';
 import '../../core/widgets/modal_search/modal_search_entity_name.dart';
 import '../../core/widgets/muscle_group_badge.dart';
+import './cardio_exercise_badge.dart';
 
 class ExerciseCard extends StatelessWidget {
   final ThemeData theme;
@@ -40,6 +42,19 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget detailBadge = switch (exercise.details) {
+      StrengthExerciseDetails(:final muscleGroup) => MuscleGroupBadge(
+        muscleGroup: muscleGroup,
+        fontSize: sizes.fontSize,
+        theme: theme,
+      ),
+      final CardioExerciseDetails cardioDetails => CardioExerciseBadge(
+        details: cardioDetails,
+        fontSize: sizes.fontSize,
+        theme: theme,
+      ),
+    };
+
     return ListCard(
       margin: sizes.margins / 2,
       padding: sizes.padding,
@@ -67,11 +82,7 @@ class ExerciseCard extends StatelessWidget {
                     fontSize: sizes.fontSize,
                     fontWeight: FontWeight.w600,
                   ),
-                  MuscleGroupBadge(
-                    muscleGroup: exercise.muscleGroup,
-                    fontSize: sizes.fontSize,
-                    theme: theme,
-                  ),
+                  detailBadge,
                 ],
               ),
             ),

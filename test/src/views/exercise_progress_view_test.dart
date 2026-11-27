@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/utils/dates.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
@@ -166,16 +167,22 @@ void main() {
     id: 1,
     name: 'Alpha Press',
     description: '',
-    muscleGroup: MuscleGroup.push,
-    muscles: muscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: muscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.user,
   );
   const zulu = ExerciseDto(
     id: 2,
     name: 'Zulu Row',
     description: '',
-    muscleGroup: MuscleGroup.pull,
-    muscles: muscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.pull,
+      muscles: muscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.user,
   );
 
@@ -458,8 +465,11 @@ void main() {
       Exercise.create(
         name: 'Bench Press',
         description: '',
-        muscleGroup: MuscleGroup.push,
-        muscles: muscles,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: muscles,
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ).toMap(),
     );
     final squatId = await db.insert(
@@ -467,8 +477,11 @@ void main() {
       Exercise.create(
         name: 'Back Squat',
         description: '',
-        muscleGroup: MuscleGroup.legs,
-        muscles: muscles,
+        details: StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.legs,
+          muscles: muscles,
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       ).toMap(),
     );
 

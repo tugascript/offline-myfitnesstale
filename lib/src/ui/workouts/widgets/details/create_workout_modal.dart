@@ -30,8 +30,13 @@ import './workout_base_form.dart';
 
 class CreateWorkoutDialog extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final EditorType initialEditorType;
 
-  const CreateWorkoutDialog({super.key, required this.sizes});
+  const CreateWorkoutDialog({
+    super.key,
+    required this.sizes,
+    this.initialEditorType = EditorType.basic,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +50,12 @@ class CreateWorkoutDialog extends StatelessWidget {
             theme: theme,
             sizes: sizes,
             isLoading: state.isLoading,
+            isEditing: false,
             submitLabel: "CREATE WORKOUT",
             initialName: "",
             initialIsFavorite: false,
             initialDifficulty: Difficulty.beginner,
-            initialEditorType: EditorType.basic,
+            initialEditorType: initialEditorType,
             onSubmit:
                 ({
                   required String name,
@@ -58,7 +64,9 @@ class CreateWorkoutDialog extends StatelessWidget {
                   required EditorType editorType,
                   String? description,
                 }) async {
-                  await context.read<WorkoutCubit>().createWorkout(
+                  final workoutCubit = context.read<WorkoutCubit>();
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  await workoutCubit.createWorkout(
                     WorkoutInput(
                       name: name,
                       isFavorite: isFavorite,
@@ -70,10 +78,13 @@ class CreateWorkoutDialog extends StatelessWidget {
                   await Future.delayed(const Duration(milliseconds: 10));
 
                   if (context.mounted) {
+                    final cubitState = workoutCubit.state;
                     Navigator.of(context).pop();
-                    final cubitState = context.read<WorkoutCubit>().state;
-                    if (cubitState.error == null &&
-                        cubitState.selectedWorkout != null) {
+                    if (cubitState.error != null) {
+                      messenger?.showSnackBar(
+                        SnackBar(content: Text(cubitState.error!.description)),
+                      );
+                    } else if (cubitState.selectedWorkout != null) {
                       context.push(
                         "/workouts/${cubitState.selectedWorkout!.id}/edit",
                       );

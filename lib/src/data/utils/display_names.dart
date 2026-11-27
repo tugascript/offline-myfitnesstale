@@ -132,6 +132,39 @@ sealed class EnumDisplayNames {
     }
   }
 
+  static String getExerciseTypeDisplayName(ExerciseType? type) {
+    switch (type) {
+      case ExerciseType.strength:
+        return 'Strength';
+      case ExerciseType.cardio:
+        return 'Cardio';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioBaseModeDisplayName(CardioBaseMode? mode) {
+    switch (mode) {
+      case CardioBaseMode.time:
+        return 'Time';
+      case CardioBaseMode.units:
+        return 'Units';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioUnitTypeDisplayName(CardioUnitType? unitType) {
+    switch (unitType) {
+      case CardioUnitType.distance:
+        return 'Distance';
+      case CardioUnitType.action:
+        return 'Action';
+      case null:
+        return 'Unknown';
+    }
+  }
+
   static String getEquipmentRarityDisplayName(EquipmentRarity? rarity) {
     switch (rarity) {
       case EquipmentRarity.veryCommon:
@@ -144,6 +177,30 @@ sealed class EnumDisplayNames {
         return 'Rare';
       case EquipmentRarity.legendary:
         return 'Legendary';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getEditorTypeDisplayName(EditorType? type) {
+    switch (type) {
+      case EditorType.basic:
+        return 'Basic';
+      case EditorType.advanced:
+        return 'Advanced';
+      case EditorType.cardio:
+        return 'Cardio';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioSetTypeDisplayName(CardioSetType? type) {
+    switch (type) {
+      case CardioSetType.constant:
+        return 'Constant';
+      case CardioSetType.interval:
+        return 'Interval';
       case null:
         return 'Unknown';
     }

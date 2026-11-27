@@ -57,12 +57,15 @@ import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_p
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_cardio_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_cardio_set_exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_option_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_record_dto.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 
 void main() {
   group('nullable copyWith fields', () {
@@ -142,10 +145,18 @@ void main() {
         id: 2,
         name: 'Bench Press',
         description: '',
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
         createdBy: CreatedBy.system,
       );
+      expect(
+        exerciseDto.getDetails<StrengthExerciseDetails>()?.muscleGroup,
+        MuscleGroup.push,
+      );
+      expect(exerciseDto.getDetails<CardioExerciseDetails>(), isNull);
       expect(goal.copyWith().exercise, isNull);
       expect(
         goal.copyWith(exercise: Nullable(exerciseDto)).exercise,
@@ -259,8 +270,11 @@ void main() {
 
       final exercise = Exercise.create(
         name: 'Bench Press',
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
         description: 'Flat bench',
         picture: pic,
         video: vid,
@@ -277,6 +291,14 @@ void main() {
         exercise.copyWith(difficulty: const Nullable(null)).difficulty,
         isNull,
       );
+      const cardioDetails = CardioExerciseDetails(
+        defaultMode: CardioBaseMode.time,
+        unitType: CardioUnitType.distance,
+        unit: 'km',
+      );
+      final cardioExercise = exercise.copyWith(details: cardioDetails);
+      expect(cardioExercise.details, cardioDetails);
+      expect(cardioExercise.type, ExerciseType.cardio);
 
       final exerciseDto = ExerciseDto.fromModel(
         exercise,
@@ -710,6 +732,69 @@ void main() {
       );
       expect(
         planRecordDto.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+    });
+
+    test('WorkoutCardioSetDto, WorkoutCardioSetExerciseDto, and WorkoutDto.cardioSets can preserve and clear nullable fields', () {
+      const cardioExercise = ExerciseDto(
+        id: 11,
+        name: 'Running',
+        description: 'Outdoor run',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        createdBy: CreatedBy.user,
+      );
+      const setExerciseDto = WorkoutCardioSetExerciseDto(
+        id: 1,
+        position: 1,
+        exerciseId: 11,
+        restSecs: 15,
+        mode: CardioBaseMode.time,
+        quantity: 600,
+        exercise: cardioExercise,
+      );
+      expect(setExerciseDto.copyWith().exercise, cardioExercise);
+      expect(
+        setExerciseDto.copyWith(exercise: const Nullable(null)).exercise,
+        isNull,
+      );
+
+      const setDto = WorkoutCardioSetDto(
+        id: 2,
+        position: 1,
+        setType: CardioSetType.interval,
+        restSecs: 60,
+        rounds: 3,
+        exercises: [setExerciseDto],
+      );
+      expect(setDto.copyWith().exercises, [setExerciseDto]);
+      expect(
+        setDto.copyWith(exercises: const Nullable(null)).exercises,
+        isNull,
+      );
+
+      const workoutDto = WorkoutDto(
+        id: 3,
+        name: 'Tempo Run',
+        muscleGroups: {},
+        muscles: TargetMuscles(primary: {}, secondary: {}),
+        difficulty: Difficulty.intermediate,
+        version: 1,
+        isFavorite: false,
+        totalSets: 3,
+        totalReps: 0,
+        editorType: EditorType.cardio,
+        createdBy: CreatedBy.user,
+        cardioSets: [setDto],
+      );
+      expect(workoutDto.isCardio, isTrue);
+      expect(workoutDto.copyWith().cardioSets, [setDto]);
+      expect(
+        workoutDto.copyWith(cardioSets: const Nullable(null)).cardioSets,
         isNull,
       );
     });
