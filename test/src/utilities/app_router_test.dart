@@ -36,6 +36,7 @@ import 'package:myfitnesstale/src/data/utils/weekday_time_of_day_value.dart';
 import 'package:myfitnesstale/src/routing/app_router.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
@@ -319,6 +320,45 @@ void main() {
     await pumpRoute(tester, '/workouts/history?id=12&version=not-a-number');
     expect(find.byType(NotFoundScreen), findsOneWidget);
   });
+
+  testWidgets(
+    'exercise detail resolves with optional exercise type query param',
+    (tester) async {
+      await pumpRoute(tester, ExerciseDetailScreen.location(17));
+      var view = tester.widget<ExerciseDetailScreen>(
+        find.byType(ExerciseDetailScreen),
+      );
+      expect(view.exerciseId, 17);
+      expect(view.exerciseType, isNull);
+
+      await pumpRoute(
+        tester,
+        ExerciseDetailScreen.location(17, type: ExerciseType.cardio),
+      );
+      view = tester.widget<ExerciseDetailScreen>(
+        find.byType(ExerciseDetailScreen),
+      );
+      expect(view.exerciseId, 17);
+      expect(view.exerciseType, ExerciseType.cardio);
+
+      await pumpRoute(
+        tester,
+        ExerciseDetailScreen.location(17, type: ExerciseType.strength),
+      );
+      view = tester.widget<ExerciseDetailScreen>(
+        find.byType(ExerciseDetailScreen),
+      );
+      expect(view.exerciseId, 17);
+      expect(view.exerciseType, ExerciseType.strength);
+
+      await pumpRoute(tester, '/exercises/17?type=unknown');
+      view = tester.widget<ExerciseDetailScreen>(
+        find.byType(ExerciseDetailScreen),
+      );
+      expect(view.exerciseId, 17);
+      expect(view.exerciseType, isNull);
+    },
+  );
 
   testWidgets('exercise records resolve with a parsed ID', (tester) async {
     await pumpRoute(

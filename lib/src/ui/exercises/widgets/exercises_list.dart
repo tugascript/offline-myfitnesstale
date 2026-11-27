@@ -25,6 +25,7 @@ import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/not_found_list.dart';
+import '../screens/exercise_detail_screen.dart';
 import './exercise_card.dart';
 
 const _skeletonStrengthExercise = ExerciseDto(
@@ -127,7 +128,9 @@ class ExercisesList extends StatelessWidget {
           theme: theme,
           exercise: exercise,
           sizes: sizes,
-          onTap: () => context.push('/exercises/${exercise.id}'),
+          onTap: () => context.push(
+            ExerciseDetailScreen.location(exercise.id, type: exercise.type),
+          ),
         );
       },
     );
