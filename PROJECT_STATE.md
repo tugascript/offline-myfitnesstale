@@ -24,7 +24,7 @@ reminder preferences do not schedule notifications.
 Repository facts at this review:
 
 - 500 Dart source files under `lib/`;
-- 38 SQLite tables (`migrations` created before transactional schema setup, plus 37 domain/backup tables in the create schema);
+- 40 SQLite tables (`migrations` created before transactional schema setup, plus 39 domain/backup tables in the create schema);
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
@@ -184,21 +184,25 @@ records.
   `workout_cardio_set_exercises`) with time or exercise-unit targets, rounds,
   and set/exercise rest durations, all offline without paywalls or entitlement
   gates.
-- Starts live strength workout records, logs decimal weight and reps, carries
-  prior values within a set group, and tracks rest/progress using
-  `WorkoutRecordInput`, `WorkoutSetRecordInput`, and
-  `WorkoutSetExerciseRecordInput` PUT semantics. Cardio workout execution and
-  cardio workout history are not yet implemented; cardio workout detail screens
-  omit strength-only Start Workout and History actions, and workout plan
-  selection and mutations restrict plans to strength workouts until cardio
-  execution is supported.
-- Completes, cancels, and resumes active strength workouts within the covered
-  lifecycle; manual completion requires confirmation, while finishing the final
-  exercise completes the workout automatically.
-- Lists, creates, edits, and deletes completed strength workout history using
-  shared `WorkoutRecordBatchInput` PUT semantics. The empty workout-history
-  actions wrap onto separate rows when the available width cannot fit both
-  labels.
+- Starts live strength and cardio workout records, persisting strength records
+  via `WorkoutRecordInput`, `WorkoutSetRecordInput`, and
+  `WorkoutSetExerciseRecordInput` and cardio records via
+  `WorkoutCardioSetRecordInput` and `WorkoutCardioSetExerciseRecordInput`
+  (`workout_cardio_set_records`, `workout_cardio_set_exercise_records`).
+  Strength workouts log decimal weight, reps, and difficulty while carrying
+  prior values within a set group; cardio workouts render a circular progress
+  timer for time-based exercises, a live elapsed timer with editable target
+  units for unit-based exercises, RPE (1–10) logging, and exercise/round rest
+  timers. Both strength and cardio workout detail screens expose Start Workout
+  and History actions; workout plan selection and mutations remain restricted
+  to strength workouts.
+- Completes, cancels, and resumes active strength and cardio workouts within
+  the covered lifecycle; manual completion requires confirmation, while
+  finishing the final exercise completes the workout automatically.
+- Lists, creates, edits, and deletes completed strength and cardio workout
+  history using shared `WorkoutRecordBatchInput` PUT semantics. The empty
+  workout-history actions wrap onto separate rows when the available width
+  cannot fit both labels.
 
 ### Weight and goals
 

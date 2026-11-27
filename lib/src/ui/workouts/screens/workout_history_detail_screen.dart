@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/repositories/workouts/dtos/workout_cardio_set_record_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_record_dto.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
@@ -33,6 +34,7 @@ import '../view_models/states/workout_record_state.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../view_models/workout_record_cubit.dart';
+import '../widgets/progress/history/detail/workout_cardio_record_sets.dart';
 import '../widgets/progress/history/detail/workout_record_head_card.dart';
 import '../widgets/progress/history/detail/workout_record_sets.dart';
 
@@ -82,6 +84,7 @@ class _WorkoutHistoryDetailScreenState
       builder: (context, profileState) {
         return BlocBuilder<WorkoutCubit, WorkoutState>(
           builder: (context, workoutState) {
+            final isCardio = workoutState.selectedWorkout?.isCardio ?? false;
             return ResponsiveScaffold(
               title: workoutState.selectedWorkout?.name ?? 'Workout Details',
               body: Padding(
@@ -95,6 +98,22 @@ class _WorkoutHistoryDetailScreenState
                               (map, s) => map
                                 ..update(
                                   s.workoutSetId,
+                                  (value) => value..add(s),
+                                  ifAbsent: () => [s],
+                                ),
+                            ) ??
+                        {};
+
+                    final Map<int, List<WorkoutCardioSetRecordDto>>
+                    cardioSetRecordsMap =
+                        workoutRecordState
+                            .selectedWorkoutRecord
+                            ?.cardioSetRecords
+                            ?.fold<Map<int, List<WorkoutCardioSetRecordDto>>>(
+                              {},
+                              (map, s) => map
+                                ..update(
+                                  s.workoutCardioSetId,
                                   (value) => value..add(s),
                                   ifAbsent: () => [s],
                                 ),
@@ -119,26 +138,48 @@ class _WorkoutHistoryDetailScreenState
                           isLoading: workoutRecordState.isLoading,
                           workoutRecord:
                               workoutRecordState.selectedWorkoutRecord,
+                          isCardio: workoutState.selectedWorkout?.isCardio,
                         ),
                         SizedBox(height: sizes.spacing),
-                        WorkoutRecordSets(
-                          sizes: sizes,
-                          theme: theme,
-                          units: profileState.system?.units ?? Units.metric,
-                          data:
-                              workoutState.selectedWorkout?.sets
-                                  ?.where(
-                                    (set) => setRecordsMap[set.id] != null,
-                                  )
-                                  .map(
-                                    (set) => WorkoutRecordSetsData(
-                                      workoutSet: set,
-                                      setRecords: setRecordsMap[set.id]!,
-                                    ),
-                                  )
-                                  .toList() ??
-                              [],
-                        ),
+                        if (isCardio)
+                          WorkoutCardioRecordSets(
+                            sizes: sizes,
+                            theme: theme,
+                            data:
+                                workoutState.selectedWorkout?.cardioSets
+                                    ?.where(
+                                      (set) =>
+                                          cardioSetRecordsMap[set.id] != null,
+                                    )
+                                    .map(
+                                      (set) => WorkoutCardioRecordSetsData(
+                                        workoutCardioSet: set,
+                                        cardioSetRecords:
+                                            cardioSetRecordsMap[set.id]!,
+                                      ),
+                                    )
+                                    .toList() ??
+                                [],
+                          )
+                        else
+                          WorkoutRecordSets(
+                            sizes: sizes,
+                            theme: theme,
+                            units: profileState.system?.units ?? Units.metric,
+                            data:
+                                workoutState.selectedWorkout?.sets
+                                    ?.where(
+                                      (set) => setRecordsMap[set.id] != null,
+                                    )
+                                    .map(
+                                      (set) => WorkoutRecordSetsData(
+                                        workoutSet: set,
+                                        setRecords: setRecordsMap[set.id]!,
+                                      ),
+                                    )
+                                    .toList() ??
+                                [],
+                          ),
                         SizedBox(height: sizes.spacing),
                         MutationButtons(
                           padding: 0,

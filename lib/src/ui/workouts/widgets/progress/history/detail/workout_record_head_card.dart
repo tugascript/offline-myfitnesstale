@@ -28,6 +28,7 @@ class WorkoutRecordHeadCard extends StatelessWidget {
   final Units units;
   final bool isLoading;
   final WorkoutRecordDto? workoutRecord;
+  final bool? isCardio;
 
   const WorkoutRecordHeadCard({
     super.key,
@@ -36,6 +37,7 @@ class WorkoutRecordHeadCard extends StatelessWidget {
     required this.units,
     required this.isLoading,
     required this.workoutRecord,
+    this.isCardio,
   });
 
   @override
@@ -55,6 +57,7 @@ class WorkoutRecordHeadCard extends StatelessWidget {
             units: units,
             isLoading: isLoading,
             workoutRecord: workoutRecord,
+            isCardio: isCardio,
           ),
         ),
       ),

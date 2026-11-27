@@ -33,6 +33,7 @@ class LatestWorkoutRecord extends StatefulWidget {
   final Units units;
   final int? workoutId;
   final int? workoutVersion;
+  final bool? isCardio;
 
   const LatestWorkoutRecord({
     super.key,
@@ -41,6 +42,7 @@ class LatestWorkoutRecord extends StatefulWidget {
     required this.units,
     this.workoutId,
     this.workoutVersion,
+    this.isCardio,
   });
 
   @override
@@ -118,6 +120,7 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
           isLoading: state.isLoadingLatest,
           workoutId: widget.workoutId,
           workoutVersion: widget.workoutVersion,
+          isCardio: widget.isCardio,
           workoutRecord: matchingRecord,
         );
       },

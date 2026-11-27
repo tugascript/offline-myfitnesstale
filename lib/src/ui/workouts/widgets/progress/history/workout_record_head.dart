@@ -34,6 +34,7 @@ class WorkoutRecordHead extends StatelessWidget {
 
   final bool isLoading;
   final WorkoutRecordDto? workoutRecord;
+  final bool? isCardio;
 
   const WorkoutRecordHead({
     super.key,
@@ -42,10 +43,13 @@ class WorkoutRecordHead extends StatelessWidget {
     required this.units,
     required this.isLoading,
     required this.workoutRecord,
+    this.isCardio,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isCardioWorkout =
+        isCardio ?? workoutRecord?.workout?.isCardio ?? false;
     return Skeletonizer(
       enabled: isLoading || workoutRecord == null,
       child: Column(
@@ -57,7 +61,10 @@ class WorkoutRecordHead extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.fitness_center, size: sizes.subtitleFontSize * 1.2),
+                Icon(
+                  isCardioWorkout ? Icons.directions_run : Icons.fitness_center,
+                  size: sizes.subtitleFontSize * 1.2,
+                ),
                 Flexible(
                   child: Text(
                     " ${workoutRecord!.workout!.name}",
@@ -112,62 +119,88 @@ class WorkoutRecordHead extends StatelessWidget {
             ],
           ),
           SizedBox(height: sizes.spacing),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                  name: 'Volume',
-                  total: units == Units.metric
-                      ? Converters.gramsToKg(workoutRecord?.totalVolume ?? 0)
-                            .round()
-                      : Converters.gramsToLbs(workoutRecord?.totalVolume ?? 0)
-                            .round(),
-                  fontSize: sizes.fontSize,
-                ),
-              ),
-              Expanded(
-                child: TotalString(
-                  leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
-                  name: 'Rest',
-                  total: Formatters.formatDuration(
-                    workoutRecord?.totalRestSecs ?? 0,
+          if (isCardioWorkout)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                    name: 'Rounds',
+                    total: workoutRecord?.totalSets ?? 0,
+                    fontSize: sizes.fontSize,
                   ),
-                  fontSize: sizes.fontSize,
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: sizes.spacing),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                  name: 'Sets',
-                  total: workoutRecord?.totalSets ?? 0,
-                  fontSize: sizes.fontSize,
+                Expanded(
+                  child: TotalString(
+                    leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
+                    name: 'Rest',
+                    total: Formatters.formatDuration(
+                      workoutRecord?.totalRestSecs ?? 0,
+                    ),
+                    fontSize: sizes.fontSize,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                  name: 'Reps',
-                  total: workoutRecord?.totalReps ?? 0,
-                  fontSize: sizes.fontSize,
+              ],
+            )
+          else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
+                    name: 'Volume',
+                    total: units == Units.metric
+                        ? Converters.gramsToKg(workoutRecord?.totalVolume ?? 0)
+                              .round()
+                        : Converters.gramsToLbs(workoutRecord?.totalVolume ?? 0)
+                              .round(),
+                    fontSize: sizes.fontSize,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          if (workoutRecord != null) ...[
-            SizedBox(height: sizes.spacing),
-            MusclesCarousel(
-              sizes: sizes,
-              theme: theme,
-              muscles: workoutRecord!.muscles,
+                Expanded(
+                  child: TotalString(
+                    leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
+                    name: 'Rest',
+                    total: Formatters.formatDuration(
+                      workoutRecord?.totalRestSecs ?? 0,
+                    ),
+                    fontSize: sizes.fontSize,
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: sizes.spacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                    name: 'Sets',
+                    total: workoutRecord?.totalSets ?? 0,
+                    fontSize: sizes.fontSize,
+                  ),
+                ),
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
+                    name: 'Reps',
+                    total: workoutRecord?.totalReps ?? 0,
+                    fontSize: sizes.fontSize,
+                  ),
+                ),
+              ],
+            ),
+            if (workoutRecord != null) ...[
+              SizedBox(height: sizes.spacing),
+              MusclesCarousel(
+                sizes: sizes,
+                theme: theme,
+                muscles: workoutRecord!.muscles,
+              ),
+            ],
           ],
         ],
       ),

@@ -22,6 +22,7 @@ import '../../../models/sqlite/workout_record_model.dart';
 import '../../../utils/dates.dart';
 import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
+import './workout_cardio_set_record_dto.dart';
 import './workout_dto.dart';
 import './workout_set_record_dto.dart';
 
@@ -45,6 +46,7 @@ final class WorkoutRecordDto extends Equatable
   // Related data
   final WorkoutDto? workout;
   final List<WorkoutSetRecordDto>? setRecords;
+  final List<WorkoutCardioSetRecordDto>? cardioSetRecords;
 
   const WorkoutRecordDto({
     required this.id,
@@ -62,12 +64,14 @@ final class WorkoutRecordDto extends Equatable
     this.completedAt,
     this.workout,
     this.setRecords,
+    this.cardioSetRecords,
   });
 
   factory WorkoutRecordDto.fromModel(
     WorkoutRecord model, {
     WorkoutDto? workout,
     List<WorkoutSetRecordDto>? setRecords,
+    List<WorkoutCardioSetRecordDto>? cardioSetRecords,
   }) {
     return WorkoutRecordDto(
       id: model.id!,
@@ -87,6 +91,7 @@ final class WorkoutRecordDto extends Equatable
           : null,
       workout: workout,
       setRecords: setRecords,
+      cardioSetRecords: cardioSetRecords,
     );
   }
 
@@ -124,6 +129,7 @@ final class WorkoutRecordDto extends Equatable
     Nullable<DateTime>? completedAt,
     Nullable<WorkoutDto>? workout,
     Nullable<List<WorkoutSetRecordDto>>? setRecords,
+    Nullable<List<WorkoutCardioSetRecordDto>>? cardioSetRecords,
   }) {
     return WorkoutRecordDto(
       id: id ?? this.id,
@@ -142,6 +148,9 @@ final class WorkoutRecordDto extends Equatable
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
       workout: workout != null ? workout.value : this.workout,
       setRecords: setRecords != null ? setRecords.value : this.setRecords,
+      cardioSetRecords: cardioSetRecords != null
+          ? cardioSetRecords.value
+          : this.cardioSetRecords,
     );
   }
 
@@ -161,6 +170,7 @@ final class WorkoutRecordDto extends Equatable
     startedAt,
     workout,
     setRecords?.length,
+    cardioSetRecords,
     completedAt,
   ];
 }

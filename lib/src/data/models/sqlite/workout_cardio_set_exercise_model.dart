@@ -116,7 +116,8 @@ final class WorkoutCardioSetExercise extends Equatable implements Model {
     WorkoutCardioSetExerciseColumns.position.value: position,
     WorkoutCardioSetExerciseColumns.workoutId.value: workoutId,
     WorkoutCardioSetExerciseColumns.workoutVersion.value: workoutVersion,
-    WorkoutCardioSetExerciseColumns.workoutCardioSetId.value: workoutCardioSetId,
+    WorkoutCardioSetExerciseColumns.workoutCardioSetId.value:
+        workoutCardioSetId,
     WorkoutCardioSetExerciseColumns.exerciseId.value: exerciseId,
     WorkoutCardioSetExerciseColumns.restSecs.value: restSecs,
     WorkoutCardioSetExerciseColumns.mode.value: mode.value,
@@ -126,30 +127,28 @@ final class WorkoutCardioSetExercise extends Equatable implements Model {
     WorkoutCardioSetExerciseColumns.updatedAt.value: updatedAt,
   };
 
-  factory WorkoutCardioSetExercise.fromMap(Map<String, Object?> map) =>
-      WorkoutCardioSetExercise(
-        id: map[WorkoutCardioSetExerciseColumns.id.value] as int?,
-        position: map[WorkoutCardioSetExerciseColumns.position.value] as int,
-        workoutId: map[WorkoutCardioSetExerciseColumns.workoutId.value] as int,
-        workoutVersion:
-            map[WorkoutCardioSetExerciseColumns.workoutVersion.value] as int,
-        workoutCardioSetId:
-            map[WorkoutCardioSetExerciseColumns.workoutCardioSetId.value]
-                as int,
-        exerciseId:
-            map[WorkoutCardioSetExerciseColumns.exerciseId.value] as int,
-        restSecs:
-            map[WorkoutCardioSetExerciseColumns.restSecs.value] as int? ?? 0,
-        mode: CardioBaseMode.fromValue(
-          map[WorkoutCardioSetExerciseColumns.mode.value] as String,
-        ),
-        quantity: map[WorkoutCardioSetExerciseColumns.quantity.value] as int,
-        createdBy: CreatedBy.fromValue(
-          map[WorkoutCardioSetExerciseColumns.createdBy.value] as String,
-        ),
-        createdAt: map[WorkoutCardioSetExerciseColumns.createdAt.value] as int,
-        updatedAt: map[WorkoutCardioSetExerciseColumns.updatedAt.value] as int,
-      );
+  factory WorkoutCardioSetExercise.fromMap(
+    Map<String, Object?> map,
+  ) => WorkoutCardioSetExercise(
+    id: map[WorkoutCardioSetExerciseColumns.id.value] as int?,
+    position: map[WorkoutCardioSetExerciseColumns.position.value] as int,
+    workoutId: map[WorkoutCardioSetExerciseColumns.workoutId.value] as int,
+    workoutVersion:
+        map[WorkoutCardioSetExerciseColumns.workoutVersion.value] as int,
+    workoutCardioSetId:
+        map[WorkoutCardioSetExerciseColumns.workoutCardioSetId.value] as int,
+    exerciseId: map[WorkoutCardioSetExerciseColumns.exerciseId.value] as int,
+    restSecs: map[WorkoutCardioSetExerciseColumns.restSecs.value] as int? ?? 0,
+    mode: CardioBaseMode.fromValue(
+      map[WorkoutCardioSetExerciseColumns.mode.value] as String,
+    ),
+    quantity: map[WorkoutCardioSetExerciseColumns.quantity.value] as int,
+    createdBy: CreatedBy.fromValue(
+      map[WorkoutCardioSetExerciseColumns.createdBy.value] as String,
+    ),
+    createdAt: map[WorkoutCardioSetExerciseColumns.createdAt.value] as int,
+    updatedAt: map[WorkoutCardioSetExerciseColumns.updatedAt.value] as int,
+  );
 
   factory WorkoutCardioSetExercise.create({
     required int position,

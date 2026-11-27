@@ -17,6 +17,7 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -26,6 +27,8 @@ import '../../home/view_models/profile_cubit.dart';
 import '../../home/view_models/states/profile_state.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
+import '../widgets/details/workout_skeleton_placeholder.dart';
+import '../widgets/progress/create_cardio_workout_record_editor.dart';
 import '../widgets/progress/create_workout_record_editor.dart';
 
 class CreateWorkoutRecordScreen extends StatefulWidget {
@@ -71,16 +74,43 @@ class _CreateWorkoutRecordScreenState extends State<CreateWorkoutRecordScreen> {
     return BlocBuilder<WorkoutCubit, WorkoutState>(
       builder: (context, workoutState) {
         if (workoutState.isLoading || workoutState.selectedWorkout == null) {
-          return const Center(child: CircularProgressIndicator());
+          return ResponsiveScaffold(
+            title: 'Log Past Workout',
+            isEntity: false,
+            body: Skeletonizer(
+              enabled: true,
+              child: WorkoutSkeletonPlaceholder(
+                theme: theme,
+                sizes: sizes,
+                sectionTitle: 'Create Workout Record',
+              ),
+            ),
+          );
         }
 
         final workout = workoutState.selectedWorkout!;
-        if (workout.sets == null || workout.sets!.isEmpty) {
-          return const Center(child: Text('This workout has no sets to log.'));
+        final hasNoSets = workout.isCardio
+            ? (workout.cardioSets == null || workout.cardioSets!.isEmpty)
+            : (workout.sets == null || workout.sets!.isEmpty);
+        if (hasNoSets) {
+          return ResponsiveScaffold(
+            title: workout.name,
+            isEntity: true,
+            body: Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: Center(
+                child: Text(
+                  workout.isCardio
+                      ? 'This workout has no cardio blocks to log.'
+                      : 'This workout has no sets to log.',
+                ),
+              ),
+            ),
+          );
         }
 
         return ResponsiveScaffold(
-          title: workoutState.selectedWorkout?.name ?? 'Log Past Workout',
+          title: workout.name,
           isEntity: true,
           body: Padding(
             padding: EdgeInsets.all(sizes.viewPadding),
@@ -97,10 +127,21 @@ class _CreateWorkoutRecordScreenState extends State<CreateWorkoutRecordScreen> {
                 SizedBox(height: sizes.spacing),
                 BlocBuilder<ProfileCubit, ProfileState>(
                   builder: (context, profileState) {
+                    final units = profileState.system?.units ?? Units.metric;
+                    if (workout.isCardio) {
+                      return CreateCardioWorkoutRecordEditor(
+                        theme: theme,
+                        sizes: sizes,
+                        units: units,
+                        workoutId: widget.workoutId,
+                        version: widget.version,
+                        cardioSets: workout.cardioSets!,
+                      );
+                    }
                     return CreateWorkoutRecordEditor(
                       theme: theme,
                       sizes: sizes,
-                      units: profileState.system?.units ?? Units.metric,
+                      units: units,
                       workoutId: widget.workoutId,
                       version: widget.version,
                       sets: workout.sets!,

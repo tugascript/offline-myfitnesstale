@@ -1380,8 +1380,8 @@ void main() {
         );
         expect(find.byType(WorkoutCardioSetCard), findsNWidgets(2));
         expect(find.byType(WorkoutSetCard), findsNothing);
-        expect(find.text('START WORKOUT'), findsNothing);
-        expect(find.text('HISTORY'), findsNothing);
+        expect(find.text('START WORKOUT'), findsOneWidget);
+        expect(find.text('HISTORY'), findsOneWidget);
       },
     );
 
@@ -1426,7 +1426,7 @@ void main() {
     );
 
     testWidgets(
-      'displays cardio sets, Cardio badge, Rounds, EDIT/DELETE, and omits Start Workout and History',
+      'displays cardio sets, Cardio badge, Rounds, START WORKOUT, HISTORY, and EDIT/DELETE',
       (tester) async {
         final cardioWorkout = _buildSampleCardioWorkout();
         final cubit = _FakeWorkoutCubit(initialSelectedWorkout: cardioWorkout);
@@ -1438,6 +1438,19 @@ void main() {
             GoRoute(
               path: '/workouts/55',
               builder: (_, _) => const WorkoutDetailScreen(workoutId: 55),
+            ),
+            GoRoute(
+              path: '/workouts/:id/active',
+              builder: (_, state) =>
+                  Scaffold(body: Text('Active ${state.pathParameters['id']}')),
+            ),
+            GoRoute(
+              path: '/workouts/history',
+              builder: (_, state) => Scaffold(
+                body: Text(
+                  'History ${state.uri.queryParameters['id']} v${state.uri.queryParameters['version']}',
+                ),
+              ),
             ),
             GoRoute(
               path: '/exercises/:id',
@@ -1475,10 +1488,23 @@ void main() {
         expect(find.text('500 m'), findsOneWidget);
         expect(find.text(' 4×'), findsOneWidget);
 
+        expect(find.text('START WORKOUT'), findsOneWidget);
+        expect(find.text('HISTORY'), findsOneWidget);
         expect(find.text('EDIT'), findsOneWidget);
         expect(find.text('DELETE'), findsOneWidget);
-        expect(find.text('START WORKOUT'), findsNothing);
-        expect(find.text('HISTORY'), findsNothing);
+
+        await tester.ensureVisible(find.text('START WORKOUT'));
+        await tester.tap(find.text('START WORKOUT'));
+        await tester.pumpAndSettle();
+        expect(find.text('Active 55'), findsOneWidget);
+
+        router.pop();
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('HISTORY'));
+        await tester.tap(find.text('HISTORY'));
+        await tester.pumpAndSettle();
+        expect(find.text('History 55 v1'), findsOneWidget);
       },
     );
 
