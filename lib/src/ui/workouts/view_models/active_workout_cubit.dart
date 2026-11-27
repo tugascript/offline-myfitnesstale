@@ -471,6 +471,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         return;
       }
 
+      final isNewRound =
+          nextSetIndex != state.currentSetPosition ||
+          nextSetNumber != state.currentSetNumber;
+
       emit(
         state.copyWith(
           isResting: false,
@@ -479,7 +483,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           currentSetPosition: nextSetIndex,
           currentExercisePosition: nextExerciseIndex,
           currentSetNumber: nextSetNumber,
-          currentSetStartedAt: nextSetStartedAt,
+          currentSetStartedAt: isNewRound
+              ? nextSetStartedAt
+              : state.currentSetStartedAt,
         ),
       );
       return;

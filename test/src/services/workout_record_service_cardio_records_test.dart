@@ -632,6 +632,7 @@ void main() {
       expect(cubit.state.currentSetNumber, 1);
       expect(cubit.state.currentExercisePosition, 0);
       expect(cubit.state.totalCurrentSet, 2);
+      final block2Round1StartedAt = cubit.state.currentSetStartedAt;
 
       // Log block 2 round 1 ex 1 -> exercise rest -> ex 2
       await cubit.logCardioExerciseSet(
@@ -649,6 +650,7 @@ void main() {
       expect(cubit.state.currentSetPosition, 1);
       expect(cubit.state.currentSetNumber, 1);
       expect(cubit.state.currentExercisePosition, 1);
+      expect(cubit.state.currentSetStartedAt, block2Round1StartedAt);
 
       // Log block 2 round 1 ex 2 -> advance to block 2 round 2 ex 1
       await cubit.logCardioExerciseSet(
@@ -680,6 +682,67 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(cubit.state.isCompleted, isTrue);
       expect(cubit.state.workoutRecord?.completedAt, isNotNull);
+    });
+
+    test('upsertWorkoutCardioSetRecord preserves initial startedAt across multi-exercise round updates', () async {
+      final db = await testDatabase.db;
+      final workout = await createSampleCardioWorkout(db);
+      final intervalBlock = workout.cardioSets![1];
+
+      final workoutStartedAt = DateTime(2026, 6, 1, 9, 0);
+      final recordRes = await workoutRecordRepository.getOrCreateWorkoutRecord(
+        WorkoutRecordInput(workoutId: workout.id, startedAt: workoutStartedAt),
+      );
+      expect(recordRes.isOk(), isTrue);
+      final recordId = recordRes.value.id;
+
+      final ex1StartedAt = DateTime(2026, 6, 1, 9, 10, 0);
+      final ex2StartedAt = DateTime(2026, 6, 1, 9, 13, 0);
+      final roundCompletedAt = DateTime(2026, 6, 1, 9, 15, 0);
+
+      final firstUpsert = await workoutRecordRepository
+          .upsertWorkoutCardioSetRecord(
+            WorkoutCardioSetRecordInput(
+              workoutCardioSetId: intervalBlock.id,
+              workoutRecordId: recordId,
+              roundNumber: 1,
+              startedAt: ex1StartedAt,
+            ),
+          );
+      expect(firstUpsert.isOk(), isTrue);
+      expect(firstUpsert.value.startedAt, ex1StartedAt);
+
+      final secondUpsert = await workoutRecordRepository
+          .upsertWorkoutCardioSetRecord(
+            WorkoutCardioSetRecordInput(
+              workoutCardioSetId: intervalBlock.id,
+              workoutRecordId: recordId,
+              roundNumber: 1,
+              startedAt: ex2StartedAt,
+              totalRestSecs: const Nullable(45),
+              completedAt: Nullable(roundCompletedAt),
+            ),
+          );
+      expect(secondUpsert.isOk(), isTrue);
+      expect(secondUpsert.value.startedAt, ex1StartedAt);
+      expect(secondUpsert.value.completedAt, roundCompletedAt);
+      expect(secondUpsert.value.totalRestSecs, 45);
+
+      // Subsequent update without completedAt keeps both startedAt and completedAt
+      final thirdUpsert = await workoutRecordRepository
+          .upsertWorkoutCardioSetRecord(
+            WorkoutCardioSetRecordInput(
+              workoutCardioSetId: intervalBlock.id,
+              workoutRecordId: recordId,
+              roundNumber: 1,
+              startedAt: ex2StartedAt.add(const Duration(minutes: 1)),
+              totalRestSecs: const Nullable(50),
+            ),
+          );
+      expect(thirdUpsert.isOk(), isTrue);
+      expect(thirdUpsert.value.startedAt, ex1StartedAt);
+      expect(thirdUpsert.value.completedAt, roundCompletedAt);
+      expect(thirdUpsert.value.totalRestSecs, 50);
     });
   });
 }

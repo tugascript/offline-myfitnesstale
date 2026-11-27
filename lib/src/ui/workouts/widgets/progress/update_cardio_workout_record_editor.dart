@@ -470,9 +470,18 @@ class _UpdateCardioWorkoutRecordEditorState
                                 final exercise = entry.value;
                                 final isLastExerciseInRound =
                                     exIndex == exercises.length - 1;
+                                final isLastRoundInBlock =
+                                    roundNumber == set.rounds;
                                 final loggedEx =
                                     _cardioExercises[set
                                         .id]?[roundNumber]?[exercise.id];
+                                final showExerciseRest =
+                                    (set.setType == CardioSetType.interval &&
+                                        (!isLastExerciseInRound ||
+                                            (!isLastRoundInBlock &&
+                                                set.restSecs == 0 &&
+                                                exercise.restSecs > 0))) ||
+                                    (loggedEx?.restSecs ?? 0) > 0;
                                 final unit = exercise.exercise
                                     ?.getDetails<CardioExerciseDetails>()
                                     ?.unit;
@@ -531,10 +540,7 @@ class _UpdateCardioWorkoutRecordEditorState
                                           WorkoutSetExerciseDifficultyType
                                               .rpe
                                               .defaultValue,
-                                      showExerciseRest:
-                                          set.setType ==
-                                              CardioSetType.interval &&
-                                          !isLastExerciseInRound,
+                                      showExerciseRest: showExerciseRest,
                                       initialExerciseRestSecs:
                                           loggedEx?.restSecs ??
                                           exercise.restSecs,

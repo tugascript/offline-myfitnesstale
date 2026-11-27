@@ -96,6 +96,7 @@ class _WorkoutCardioSetExerciseRecordFormState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialQuantity != widget.initialQuantity ||
         oldWidget.initialDurationSecs != widget.initialDurationSecs ||
+        oldWidget.showExerciseRest != widget.showExerciseRest ||
         oldWidget.initialExerciseRestSecs != widget.initialExerciseRestSecs ||
         oldWidget.initialRoundRestSecs != widget.initialRoundRestSecs ||
         oldWidget.initialRpe != widget.initialRpe ||

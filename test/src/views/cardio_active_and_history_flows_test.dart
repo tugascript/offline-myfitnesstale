@@ -677,6 +677,204 @@ void main() {
     );
 
     testWidgets(
+      'UpdateWorkoutRecordScreen preserves last exercise rest between interval rounds when block rest is zero',
+      (tester) async {
+        final intervalWorkout = const WorkoutDto(
+          id: 88,
+          name: 'Zero Block Rest Intervals',
+          description: 'Interval rounds using per-exercise rest',
+          muscleGroups: {},
+          muscles: TargetMuscles(primary: {}, secondary: {}),
+          difficulty: Difficulty.intermediate,
+          version: 1,
+          isFavorite: false,
+          totalSets: 2,
+          totalReps: 0,
+          createdBy: CreatedBy.user,
+          editorType: EditorType.cardio,
+          cardioSets: [
+            WorkoutCardioSetDto(
+              id: 501,
+              position: 1,
+              setType: CardioSetType.interval,
+              restSecs: 0,
+              rounds: 2,
+              exercises: [
+                WorkoutCardioSetExerciseDto(
+                  id: 601,
+                  exerciseId: 201,
+                  position: 1,
+                  restSecs: 20,
+                  mode: CardioBaseMode.time,
+                  quantity: 60,
+                  exercise: _runExercise,
+                ),
+                WorkoutCardioSetExerciseDto(
+                  id: 602,
+                  exerciseId: 202,
+                  position: 2,
+                  restSecs: 30,
+                  mode: CardioBaseMode.units,
+                  quantity: 400,
+                  exercise: _rowExercise,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final startedAt = DateTime(2026, 6, 2, 8, 0);
+        final completedAt = DateTime(2026, 6, 2, 8, 12);
+        final intervalRecord = WorkoutRecordDto(
+          id: 950,
+          workoutId: 88,
+          version: 1,
+          totalVolume: 0,
+          totalSets: 2,
+          totalReps: 0,
+          totalRestSecs: 70,
+          currentSetPosition: 1,
+          currentSetNumber: 2,
+          currentExercisePosition: 1,
+          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          startedAt: startedAt,
+          completedAt: completedAt,
+          workout: intervalWorkout,
+          cardioSetRecords: [
+            WorkoutCardioSetRecordDto(
+              id: 1101,
+              workoutCardioSetId: 501,
+              roundNumber: 1,
+              startedAt: startedAt,
+              completedAt: startedAt.add(const Duration(minutes: 5)),
+              totalRestSecs: 0,
+              exerciseRecords: const [
+                WorkoutCardioSetExerciseRecordDto(
+                  id: 1201,
+                  workoutCardioSetExerciseId: 601,
+                  exerciseId: 201,
+                  position: 1,
+                  mode: CardioBaseMode.time,
+                  quantity: 60,
+                  durationSecs: 60,
+                  restSecs: 20,
+                  rpe: 8,
+                  exercise: _runExercise,
+                ),
+                WorkoutCardioSetExerciseRecordDto(
+                  id: 1202,
+                  workoutCardioSetExerciseId: 602,
+                  exerciseId: 202,
+                  position: 2,
+                  mode: CardioBaseMode.units,
+                  quantity: 400,
+                  durationSecs: 95,
+                  restSecs: 30,
+                  rpe: 9,
+                  exercise: _rowExercise,
+                ),
+              ],
+            ),
+            WorkoutCardioSetRecordDto(
+              id: 1102,
+              workoutCardioSetId: 501,
+              roundNumber: 2,
+              startedAt: startedAt.add(const Duration(minutes: 6)),
+              completedAt: completedAt,
+              totalRestSecs: 0,
+              exerciseRecords: const [
+                WorkoutCardioSetExerciseRecordDto(
+                  id: 1203,
+                  workoutCardioSetExerciseId: 601,
+                  exerciseId: 201,
+                  position: 1,
+                  mode: CardioBaseMode.time,
+                  quantity: 60,
+                  durationSecs: 60,
+                  restSecs: 20,
+                  rpe: 8,
+                  exercise: _runExercise,
+                ),
+                WorkoutCardioSetExerciseRecordDto(
+                  id: 1204,
+                  workoutCardioSetExerciseId: 602,
+                  exerciseId: 202,
+                  position: 2,
+                  mode: CardioBaseMode.units,
+                  quantity: 400,
+                  durationSecs: 98,
+                  restSecs: 0,
+                  rpe: 9,
+                  exercise: _rowExercise,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final workoutCubit = _FakeWorkoutCubit(intervalWorkout);
+        final recordCubit = _FakeWorkoutRecordCubit(intervalRecord);
+        final profileCubit = ProfileCubit(
+          profileRepository: ProfileRepository.create(),
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(recordCubit.close);
+        addTearDown(profileCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/back/update',
+          routes: [
+            GoRoute(
+              path: '/back',
+              builder: (_, _) => const Scaffold(body: Text('Back')),
+              routes: [
+                GoRoute(
+                  path: 'update',
+                  builder: (_, _) => const UpdateWorkoutRecordScreen(
+                    workoutId: 88,
+                    workoutRecordId: 950,
+                    version: 1,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<WorkoutRecordCubit>.value(value: recordCubit),
+              BlocProvider<ProfileCubit>.value(value: profileCubit),
+            ],
+            child: MaterialApp.router(
+              key: const ValueKey('interval-zero-rest-update-app'),
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('SAVE WORKOUT RECORD'));
+        await tester.tap(find.text('SAVE WORKOUT RECORD'));
+        await tester.pumpAndSettle();
+
+        expect(recordCubit.lastUpdatedBatch, isNotNull);
+        expect(recordCubit.lastUpdatedBatch!.cardioSets, hasLength(2));
+        final round1Exercises =
+            recordCubit.lastUpdatedBatch!.cardioSets[0].exercises;
+        final round2Exercises =
+            recordCubit.lastUpdatedBatch!.cardioSets[1].exercises;
+        expect(round1Exercises[0].restSecs, 20);
+        expect(round1Exercises[1].restSecs, 30);
+        expect(round2Exercises[0].restSecs, 20);
+        expect(round2Exercises[1].restSecs, 0);
+      },
+    );
+
+    testWidgets(
       'active cardio, history, detail, and record forms render without overflow at 320px width and 200% text scaling',
       (tester) async {
         tester.view.physicalSize = const Size(320, 640);

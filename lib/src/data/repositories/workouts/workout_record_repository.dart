@@ -1001,13 +1001,18 @@ final class WorkoutRecordRepository implements Repository {
       if (records.isNotEmpty) {
         final WorkoutCardioSetRecord record = records.first;
         final int oldRest = record.totalRestSecs ?? 0;
+        final int incomingStartedAt = DateUtilities.getDateUnix(
+          input.startedAt,
+        );
         final WorkoutCardioSetRecord updatedRecord = record.copyWith(
-          startedAt: DateUtilities.getDateUnix(input.startedAt),
+          startedAt: incomingStartedAt < record.startedAt
+              ? incomingStartedAt
+              : record.startedAt,
           totalRestSecs: input.totalRestSecs,
           completedAt: Nullable(
             input.completedAt.value != null
                 ? DateUtilities.getDateUnix(input.completedAt.value!)
-                : null,
+                : record.completedAt,
           ),
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
