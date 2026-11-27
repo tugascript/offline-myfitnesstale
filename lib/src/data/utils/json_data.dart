@@ -54,9 +54,8 @@ final class VideoData extends Equatable implements JsonData {
     uri: map['uri'] as String,
   );
 
-  factory VideoData.fromJson(String json) => VideoData.fromMap(
-    Map<String, Object?>.from(jsonDecode(json) as Map),
-  );
+  factory VideoData.fromJson(String json) =>
+      VideoData.fromMap(Map<String, Object?>.from(jsonDecode(json) as Map));
 
   @override
   VideoData copyWith({VideoPlatform? platform, String? uri}) =>
@@ -84,9 +83,8 @@ final class PictureData extends Equatable implements JsonData {
     uri: map['uri'] as String,
   );
 
-  factory PictureData.fromJson(String json) => PictureData.fromMap(
-    Map<String, Object?>.from(jsonDecode(json) as Map),
-  );
+  factory PictureData.fromJson(String json) =>
+      PictureData.fromMap(Map<String, Object?>.from(jsonDecode(json) as Map));
 
   @override
   PictureData copyWith({PictureStorage? storage, String? uri}) =>
@@ -117,15 +115,12 @@ final class TargetMuscles extends Equatable implements JsonData {
     });
   }
 
-  factory TargetMuscles.fromMap(Map<String, List<String>> map) =>
-      TargetMuscles(
-        primary:
-            map['primary']?.map((m) => Muscle.fromValue(m)).toSet() ??
-            <Muscle>{},
-        secondary:
-            map['secondary']?.map((m) => Muscle.fromValue(m)).toSet() ??
-            <Muscle>{},
-      );
+  factory TargetMuscles.fromMap(Map<String, List<String>> map) => TargetMuscles(
+    primary:
+        map['primary']?.map((m) => Muscle.fromValue(m)).toSet() ?? <Muscle>{},
+    secondary:
+        map['secondary']?.map((m) => Muscle.fromValue(m)).toSet() ?? <Muscle>{},
+  );
 
   @override
   TargetMuscles copyWith({Set<Muscle>? primary, Set<Muscle>? secondary}) =>
@@ -150,8 +145,7 @@ final class TargetMuscles extends Equatable implements JsonData {
 }
 
 @immutable
-final class WorkoutSetExerciseDifficulty extends Equatable
-    implements JsonData {
+final class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
   final int value;
   final WorkoutSetExerciseDifficultyType type;
 

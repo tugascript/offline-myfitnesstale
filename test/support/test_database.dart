@@ -29,7 +29,9 @@ import 'package:myfitnesstale/src/data/models/sqlite/profile_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/reminders_config_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_exercise_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_record_model.dart';
@@ -69,6 +71,8 @@ class TestDatabase {
   Future<void> clearWorkoutTables() async {
     final database = await db;
     await database.transaction((txn) async {
+      await txn.delete(WorkoutCardioSetExerciseRecord.table);
+      await txn.delete(WorkoutCardioSetRecord.table);
       await txn.delete(WorkoutRecord.table);
       await txn.delete(WorkoutCardioSetExercise.table);
       await txn.delete(WorkoutCardioSet.table);
